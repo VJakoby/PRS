@@ -18,19 +18,19 @@ Designed for offline use with fuzzy search, smart relevance ranking, and a moder
 
 ## 🔢 How Relevance Scoring Works
 
-Pentest Reference Search ranks results using a **weighted relevance scoring system**.  
-Instead of simple keyword matching, each result earns points based on *where* and *how* the search term appears.
+- PRS ranks results using a **weighted relevance scoring system**.  
+- Instead of simple keyword matching, each result earns points based on *where* and *how* the search term appears.
 
-Results are sorted by **total score**, highest first.
+- Results are sorted by **total score**, highest first.
 
 ---
 
 ### 🧠 Scoring Concept
 
-Not all matches are equal.
+- Not all matches are equal.
 
-A page where the search term appears in the **title** is usually far more relevant than a page where it is mentioned once in the content.  
-The scoring system reflects this by assigning **higher weights to stronger signals**.
+- A page where the search term appears in the **title** is usually far more relevant than a page where it is mentioned once in the content.  
+- The scoring system reflects this by assigning **higher weights to stronger signals**.
 
 ---
 
