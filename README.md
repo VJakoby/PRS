@@ -5,7 +5,7 @@ Designed for offline use with fuzzy search, smart relevance ranking, and a moder
 
 ---
 
-## ✨ What’s New in v3.0
+## ✨ Key-Features
 
 - 🎯 Improved search algorithm with multi-level scoring
 - 📚 Source overview on the homepage
