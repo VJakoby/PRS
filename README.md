@@ -13,54 +13,54 @@
 - 💬 Snippet previews showing keyword context
 - 🔍 Fuzzy search for misspellings
 
+## 🔢 Relevance Scoring
 
-## 🔢 How Relevance Scoring Works
+Search results are ranked using a **weighted relevance scoring system** that prioritizes strong, intentional matches over raw keyword frequency.
 
-- PRS ranks results using a **weighted relevance scoring system**.  
-- Instead of simple keyword matching, each result earns points based on *where* and *how* the search term appears.
+Each result is scored based on:
+- **Match strength** (exact, partial, fuzzy)
+- **Match location** (title, URL, content)
+- **Source type** (external vs local)
 
-- Results are sorted by **total score**, highest first.
-
----
-
-### 🧠 Scoring Concept
-
-- Not all matches are equal.
-- A page where the search term appears in the **title** is usually far more relevant than a page where it is mentioned once in the content.  
-- The scoring system reflects this by assigning **higher weights to stronger signals**.
+Results are sorted by their **final adjusted score**, highest first.
 
 ---
 
-### 📊 Scoring Rules
+### 📊 Scoring Signals
 
-Each result can receive points from multiple categories:
+| Signal | Score |
+|------|-------|
+| Exact title match | +100 |
+| Title contains term | +50 |
+| Page name match | +30 |
+| URL match | +20 |
+| Content match | +2 per occurrence (capped) |
+| Short title bonus (<50 chars) | +5 |
+| Fuzzy match (fallback) | ≤ +6 (capped) |
 
-| Match Type | Score | Explanation |
-|-----------|-------|-------------|
-| **Exact title match** | +100 | Page title exactly matches the search term |
-| **Title contains term** | +50 | Search term appears in the page title |
-| **Page name match** | +30 | Match in the URL-derived page name (e.g. `/services/kerberos`) |
-| **URL match** | +20 | Search term appears anywhere in the URL |
-| **Content match** | +2 per occurrence | Each mention in page content adds score |
-| **Short title bonus** | +5 | Titles shorter than 50 characters |
-| **Fuzzy match** | +10 | ≥70% similarity for misspelled queries |
-
-Scores are cumulative — a single result can gain points from several categories.
+Scores are cumulative, with caps applied to prevent noisy results from dominating.
 
 ---
 
-### 🥇 Ranking Priority
+### 🌐 Source Priority
 
-In practice, this means results are prioritized roughly in the following order:
+- **External documentation** (GitBook, Docusaurus, web) is prioritized over local files when relevance is similar.
+- **Local files** rank slightly lower by default.
 
-1. Exact title matches  
-2. Titles containing the search term  
-3. Page name matches  
-4. URL matches  
-5. Content mentions  
-6. Fuzzy (misspelled) matches  
+Hard rules:
+- Fuzzy matching is **fallback only**
+- Fuzzy results are always ranked **after** non-fuzzy results
+- Fuzzy + external results are heavily penalized
 
-This ensures that **authoritative, topic-focused pages rank higher than generic references**.
+---
+
+### 🥇 Effective Ranking Order
+
+1. Exact and partial matches in external sources  
+2. Exact and partial matches in local files  
+3. Content-only matches  
+4. Fuzzy matches (shown last as related results)
+
 
 ---
 
@@ -95,7 +95,7 @@ Either online sources(primarily gitbooks) or offline sources(primarily .md markd
       "type": "local",
       "path": "/path/to/offline-notes",
       "file_extensions": [
-        ".md"
+        ".md"    # And other if you want
       ],
       "enabled": true,
       "description": "Local notes"
