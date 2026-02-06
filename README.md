@@ -6,7 +6,7 @@
 
 ## ✨ Key-Features
 
-- Fast index and search
+- 💨 Fast indexing and searching
 - 🎯 Search algorithm with multi-level scoring
 - ℹ️ Uses online (GitBook) sources or local sources (.MD files)
 - 📚 Source overview on the homepage
