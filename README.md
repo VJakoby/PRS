@@ -28,7 +28,6 @@ Designed for offline use with fuzzy search, smart relevance ranking, and a moder
 ### 🧠 Scoring Concept
 
 - Not all matches are equal.
-
 - A page where the search term appears in the **title** is usually far more relevant than a page where it is mentioned once in the content.  
 - The scoring system reflects this by assigning **higher weights to stronger signals**.
 
@@ -70,13 +69,14 @@ This ensures that **authoritative, topic-focused pages rank higher than generic 
 ## ➕ Adding New Sources
 
 All searchable content is defined in `sources.json`.
+Either online sources or offline sources(primarily .md markdown files focused)
 
 ### Steps
 
 1. Open `sources.json`
-2. Add a new source object
+2. Add a new online/offline source object
 3. Run the indexer
-4. Restart the server
+5. Restart the server
 
 ---
 
