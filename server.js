@@ -77,9 +77,11 @@ app.post('/api/search', (req, res) => {
             title: r.title,
             page_name: r.page_name,
             url: r.url,
+            file_path: r.file_path,
             relevance_score: r.relevance_score,
             match_type: r.match_type,
-            snippet: r.snippet
+            snippet: r.snippet,  // Now includes {text, highlightStart, highlightLength}
+            is_local: r.is_local
         }));
 
         res.json({
@@ -140,6 +142,62 @@ app.get('/api/preview', async (req, res) => {
     }
 });
 
+// API: Incremental update of local file
+app.post('/api/update-file', async (req, res) => {
+    const { file } = req.body;
+    
+    if (!file) {
+        return res.status(400).json({ error: 'No file specified' });
+    }
+    
+    try {
+        const success = await indexer.updateLocalFile(file);
+        if (success) {
+            res.json({ 
+                success: true, 
+                message: 'File updated in index',
+                total_pages: indexer.index.pages.length
+            });
+        } else {
+            res.status(400).json({ 
+                success: false,
+                error: 'Could not update file'
+            });
+        }
+    } catch (error) {
+        console.error('Update file error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// API: Remove file from index
+app.post('/api/remove-file', async (req, res) => {
+    const { file } = req.body;
+    
+    if (!file) {
+        return res.status(400).json({ error: 'No file specified' });
+    }
+    
+    try {
+        const success = await indexer.removeLocalFile(file);
+        if (success) {
+            res.json({ 
+                success: true, 
+                message: 'File removed from index',
+                total_pages: indexer.index.pages.length
+            });
+        } else {
+            res.status(404).json({ 
+                success: false,
+                error: 'File not found in index'
+            });
+        }
+    } catch (error) {
+        console.error('Remove file error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 // API: Bygg om index (async)
 app.post('/api/rebuild-index', async (req, res) => {
     if (!indexReady) {
@@ -173,7 +231,7 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`\n✅ Pentest Reference Search`);
+    console.log(`\n✅ Pentest Reference Search v3.0`);
     console.log(`🌐 Server körs på http://localhost:${PORT}`);
     console.log(`📂 Öppna http://localhost:${PORT} i din webbläsare\n`);
     
