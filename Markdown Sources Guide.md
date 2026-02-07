@@ -328,9 +328,3 @@ Complete example:
   ]
 }
 ```
-
----
-
-**Version:** 3.2  
-**Compatibility:** v3.0+  
-**Created:** 2026-02-07
