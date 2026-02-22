@@ -1,6 +1,4 @@
-<h1 align="center">🔍 Pentesting KB Indexer (PKBI)</h1>
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+# PKBI/ENGRAM (Pentesting KB Indexer)
 
 A fast local tool for searching indexed pages of pentesting documentation, both online and local.
 
@@ -89,5 +87,5 @@ You can adjust the `RATE` variable at the top of `indexer.js` to change indexing
 -   **100ms**: 10 req/sec *(Fast, risk of blocks)*
 
 ---
-*Created by VJakoby. Feel free to use for your own needs.*
+*v1.0*
 
