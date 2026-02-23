@@ -89,3 +89,4 @@ You can adjust the `RATE` variable at the top of `indexer.js` to change indexing
 ---
 *v1.0*
 
+Created by VJakoby + 🤖
