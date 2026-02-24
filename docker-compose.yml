@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  app:
+    build: .
+    container_name: node_indexer
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./sources.json:/app/sources.json
+      - cache_data:/app/cache
+    restart: unless-stopped
+
+volumes:
+  cache_data:
