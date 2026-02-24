@@ -56,7 +56,8 @@
             color: var(--text-primary);
             min-height: 100vh;
             transition: background-color 0.3s ease, color 0.3s ease;
-            line-height: 1.6;
+            line-height: 1.45;
+            font-size: 13px;
         }
 
         .container {
@@ -70,9 +71,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 32px 0;
-            border-bottom: 2px solid var(--border-color);
-            margin-bottom: 40px;
+            padding: 24px 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 28px;
         }
 
         .logo {
@@ -82,8 +83,8 @@
         }
 
         .logo-icon {
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
             border-radius: 4px;
             display: flex;
@@ -93,7 +94,7 @@
         }
 
         .logo-text h1 {
-            font-size: 24px;
+            font-size: 18px;
             font-weight: 700;
             color: var(--text-primary);
             letter-spacing: -0.5px;
@@ -101,7 +102,7 @@
         }
 
         .logo-text p {
-            font-size: 13px;
+            font-size: 11px;
             color: var(--text-secondary);
             font-weight: 500;
             margin: 0;
@@ -111,10 +112,10 @@
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
-            padding: 10px 18px;
+            padding: 8px 14px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             transition: all 0.2s;
             display: flex;
@@ -135,10 +136,10 @@
         /* Search Section - Prominent box */
         .search-section {
             background: var(--bg-secondary);
-            border: 2px solid var(--border-color);
+            border: 1px solid var(--border-color);
             border-radius: 4px;
-            padding: 32px;
-            margin-bottom: 32px;
+            padding: 18px;
+            margin-bottom: 20px;
         }
 
         .search-box {
@@ -147,8 +148,8 @@
 
         #searchInput {
             width: 100%;
-            padding: 16px 20px;
-            font-size: 16px;
+            padding: 8px 12px;
+            font-size: 13px;
             background: var(--bg-primary);
             border: 2px solid var(--border-color);
             border-radius: 4px;
@@ -164,16 +165,16 @@
 
         .search-hint {
             color: var(--text-secondary);
-            font-size: 13px;
-            margin-top: 12px;
+            font-size: 12px;
+            margin-top: 8px;
             text-align: center;
         }
 
         /* Filter Pills - Squared buttons */
         .filters {
             display: flex;
-            gap: 14px;
-            margin-top: 24px;
+            gap: 10px;
+            margin-top: 18px;
             flex-wrap: wrap;
             justify-content: center;
         }
@@ -185,7 +186,7 @@
         }
 
         .filter-label {
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 600;
             color: var(--text-secondary);
             text-transform: uppercase;
@@ -203,12 +204,12 @@
         }
 
         .filter-group label span {
-            padding: 8px 16px;
+            padding: 5px 10px;
             background: var(--bg-primary);
             border: 2px solid var(--border-color);
             border-radius: 4px;
             color: var(--text-secondary);
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 600;
             transition: all 0.2s;
             display: inline-block;
@@ -277,14 +278,14 @@
         .results {
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 10px;
         }
 
         .result-item {
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            padding: 20px;
+            padding: 16px;
             transition: all 0.2s;
             position: relative;
         }
@@ -313,7 +314,7 @@
         }
 
         .result-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             color: var(--text-primary);
             margin-bottom: 4px;
@@ -322,7 +323,7 @@
 
         .result-page-name {
             color: var(--accent-blue);
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 500;
         }
 
@@ -364,11 +365,11 @@
         .result-snippet {
             background: var(--bg-primary);
             border-left: 3px solid var(--accent-blue);
-            padding: 12px 16px;
-            margin: 16px 0;
+            padding: 10px 14px;
+            margin: 12px 0;
             color: var(--text-secondary);
-            font-size: 14px;
-            line-height: 1.6;
+            font-size: 13px;
+            line-height: 1.5;
             border-radius: 0 4px 4px 0;
         }
 
@@ -391,10 +392,10 @@
             display: inline-block;
             background: var(--accent-blue);
             color: white;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 4px;
             text-decoration: none;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             transition: all 0.2s;
             border: none;
@@ -433,11 +434,11 @@
         /* Tips Section */
         .tips {
             text-align: center;
-            padding: 80px 20px;
+            padding: 48px 16px;
         }
 
         .tips-title {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 700;
             color: var(--text-primary);
             margin-bottom: 32px;
@@ -446,7 +447,7 @@
         .tips-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 14px;
+            gap: 10px;
             max-width: 900px;
             margin: 0 auto;
         }
@@ -455,7 +456,7 @@
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            padding: 20px;
+            padding: 16px;
             text-align: left;
         }
 
@@ -490,8 +491,8 @@
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            padding: 20px;
-            margin-top: 48px;
+            padding: 16px;
+            margin-top: 32px;
         }
 
         .sources-header {
@@ -519,7 +520,7 @@
 
         .sources-title {
             color: var(--text-primary);
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
             display: flex;
             align-items: center;
@@ -554,7 +555,7 @@
             background: var(--bg-primary);
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            padding: 20px;
+            padding: 16px;
             transition: all 0.2s;
             position: relative;
         }
@@ -605,7 +606,7 @@
         .source-name {
             color: var(--text-primary);
             font-weight: 700;
-            font-size: 16px;
+            font-size: 14px;
             margin-bottom: 4px;
         }
 
@@ -623,14 +624,14 @@
 
         .source-desc {
             color: var(--text-secondary);
-            font-size: 13px;
-            margin-top: 8px;
+            font-size: 12px;
+            margin-top: 6px;
         }
 
         .source-pages {
             color: var(--text-secondary);
-            font-size: 13px;
-            margin-top: 12px;
+            font-size: 12px;
+            margin-top: 10px;
         }
 
         /* Keyboard hint */
