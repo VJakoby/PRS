@@ -18,7 +18,7 @@
       "id": "github-notes-example",
       "name": "SQL Injection Payloads - GitHub",
       "type": "markdown",
-      "enabled": false,
+      "enabled": true,
       "cache_offline": false,
       "description": "EXAMPLE Raw markdown files from GitHub",
       "urls": [
@@ -58,7 +58,7 @@
       "type": "gitbook",
       "index_url": "https://hackviser.com/tactics/hardening",
       "search_url": "https://hackviser.com/tactics/hardening?q={query}",
-      "enabled": false,
+      "enabled": true,
       "description": "System hardening guides"
     },
     {
@@ -67,7 +67,7 @@
       "type": "gitbook",
       "index_url": "https://oscp-notes-2025.gitbook.io/oscp+-notes-2025/",
       "search_url": "https://oscp-notes-2025.gitbook.io/oscp+-notes-2025?q={query}",
-      "enabled": false,
+      "enabled": true,
       "description": "OSCP certification study notes"
     },
     {
