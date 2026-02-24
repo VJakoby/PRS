@@ -11,7 +11,12 @@
     "cache-status": "node indexer.js cache-status",
     "remove": "node indexer.js remove",
     "search": "node indexer.js search",
-    "info": "node indexer.js info"
+    "info": "node indexer.js info",
+    "docker:build": "docker compose build",
+    "docker:index": "docker compose run --rm app npm run index",
+    "docker:cache": "docker compose run --rm app npm run cache",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
   },
   "dependencies": {
     "express": "^4.18.2",
