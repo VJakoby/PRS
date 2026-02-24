@@ -38,7 +38,7 @@ async function startServer() {
     }
 
     // Start server after index is loaded
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
         console.log(`✅ Pentesting Knowledge Base Indexer server started`);
         console.log(`🌐 Server is being run at:  http://localhost:${PORT}`);
         if (!indexReady) {
