@@ -1,17 +1,20 @@
-# Use a lightweight Node image
-FROM node:20-alpine
+FROM node:20-slim
 
-# Set the working directory inside the container
-WORKDIR /usr/src/app
+WORKDIR /app
 
-# Copy package files and install dependencies
+# Install deps first for layer caching
 COPY package*.json ./
-RUN npm install
+RUN npm ci --only=production
 
-# Copy the rest of your code
+# Copy app source
 COPY . .
 
-# Match this to whatever port your app listens on
-EXPOSE 3002
+# Create cache dir (will be overridden by volume if mounted)
+RUN mkdir -p cache && chown -R node:node /app
 
-CMD ["npm", "start"]
+USER node
+
+EXPOSE 3000
+
+# Default command just starts server
+CMD ["npm", "run", "start"]
