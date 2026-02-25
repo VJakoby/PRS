@@ -1,6 +1,5 @@
-# PKBI/ENGRAM (Pentesting KB Indexer)
-
-A fast local tool for searching indexed pages of pentesting documentation, both online and local.
+# 🔎📖 ENGRAM
+> **Knowledge base Indexer** - A fast local tool for searching indexed pages of pentesting documentation, both online and local.
 
 ## Why?
 Technical documentation can be fragmented between Remote Public Docs (Web) and Local Documentation (Markdown). 
@@ -37,6 +36,16 @@ All sources are defined in `sources.json`.
 -   **Docusaurus**: Sequential indexing of specified paths.
 -   **Markdown**: Track specific raw URLs (e.g., from GitHub).
 -   **Local Documentation**: Index directories of markdown files on your drive.
+
+## 🚀 Usage
+
+### Performance & Politeness
+The indexer is designed with a **"Fair-Use" Politeness Layer** to ensure it remains friendly to target servers while maintaining high indexing speed.
+
+* **Default Rate:** 5 requests per second (`200ms` delay).
+* **Configuration:** You can adjust the indexing intensity in `config.js` or `server.js` via the `RATE` constant:
+  ```javascript
+  const RATE = 200; // Fair speed: 5 req/sec
 
 ## 🚀 Getting Started
 
@@ -87,6 +96,5 @@ You can adjust the `RATE` variable at the top of `indexer.js` to change indexing
 -   **100ms**: 10 req/sec *(Fast, risk of blocks)*
 
 ---
-*v1.0*
 
-Created by VJakoby + 🤖
+Created by VJakoby + 🤖 | Licensed under MIT | [View AI & Architectural Disclosure](./AI-DISCLOSURE.md)
