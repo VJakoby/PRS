@@ -55,7 +55,7 @@ Follow these steps to set up and run the project locally.
 
 ### Docker (Quickest)
 
-#### 1 Build and run the image
+#### Build and run the image
 ```bash
 docker-compose up --build
 ```
