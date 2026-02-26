@@ -2,7 +2,7 @@
 > **Knowledge base Indexer** - A fast local tool for searching indexed pages, in this case pentesting documentation, both online and local.
 
 ## Why?
-Technical documentation can be fragmented between Remote Public Docs (Web) and Local Documentation (Markdown). 
+Technical documentation can be fragmented between Remote Public Docs (Web) and local documentation (Markdown). 
 
 This project eliminates the overhead of switching between browser tabs and local editors by providing a Unified Search Interface.
 
@@ -47,19 +47,29 @@ The indexer is designed with a **"Fair-Use" Politeness Layer** to ensure it rema
   ```javascript
   const RATE = 200; // Fair speed: 5 req/sec
 
+---
+
 ## 🚀 Getting Started
 
 Follow these steps to set up and run the project locally.
 
-### 1. Install dependencies
+### Docker (Quickest)
+
+#### 1 Build and run the image
+```bash
+docker-compose up --build
+```
+
+### NPM
+#### 1. Install dependencies
 ```bash
 npm install
 ```
 
-### 2. Configure sources
+#### 2. Configure sources
 Open `sources.json` and add your favorite documentation sources. Set `"enabled": true` for those you want to search.
 
-### 3. Build the Index
+#### 3. Build the Index
 ```bash
 # Full build of all enabled sources (online + offline)
 npm run index
@@ -68,14 +78,17 @@ npm run index
 npm run cache
 ```
 
-### 4. Search & Run
+#### 4. Start the service
 ```bash
-# Start the web interface
 npm start
-
-# Or search directly from terminal
-npm run search -- "query"
 ```
+
+#### Search directly via CLI
+```bash
+npm run search -- "search query"
+```
+
+---
 
 ## 🛠️ CLI Commands
 
@@ -87,6 +100,8 @@ npm run search -- "query"
 | `npm run update <path>`| Force-update a specific local file in the index. |
 | `npm run info` | View index statistics (total pages, sources, last update). |
 | `npm run search` | Fast CLI-based search. |
+
+---
 
 ## ⚙️ Performance Tuning
 
