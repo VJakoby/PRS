@@ -1,5 +1,5 @@
 # 🔎📖 ENGRAM
-> **Knowledge base Indexer** - A fast local tool for searching indexed pages, in this case pentesting documentation, both online and local.
+> **Knowledge base indexer** - A fast local tool for searching indexed pages, in this case pentesting documentation, both online and local.
 
 ## Why?
 Technical documentation can be fragmented between Remote Public Docs (Web) and local documentation (Markdown). 
