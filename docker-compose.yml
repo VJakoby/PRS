@@ -2,7 +2,7 @@ version: "3.9"
 services:
   app:
     build: .
-    container_name: node_indexer
+    container_name: engram-kb-indexer
     ports:
       - "3002:3002"
     volumes:
