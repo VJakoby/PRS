@@ -20,7 +20,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const cheerio = require('cheerio');
 const crypto = require('crypto');
-const RATE = 200; // Delay in ms between the requests (1000 = 1 req/sec), (500 = 2 req/sec)
+const RATE = 1000; // Delay in ms between the requests (1000 = 1 req/sec), (500 = 2 req/sec
 
 class ContentIndexer {
     constructor() {
@@ -302,7 +302,7 @@ class ContentIndexer {
             const response = await axios.get(url, {
                 timeout,
                 headers: {
-                    'User-Agent': 'PKBI',
+                    'User-Agent': 'ENGRAM',
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                     'Accept-Language': 'en-US,en;q=0.5',
                 },
@@ -797,118 +797,90 @@ class ContentIndexer {
     }
 
     // Expand query with synonyms for better search coverage
-    // Returns an object with:
-    // - primary: the original query (lowercased, trimmed)
-    // - terms:   array of unique terms/phrases to search for
     expandQuery(query) {
-        const primary = query.toLowerCase().trim();
-        
         if (!this.synonyms || Object.keys(this.synonyms).length === 0) {
-            return { primary, terms: primary ? [primary] : [] };
+            return query; // No synonyms loaded
         }
-        
-        const words = primary.split(/\s+/).filter(Boolean);
+
+        const terms = query.toLowerCase().split(/\s+/);
         const expanded = new Set();
-        
-        // Always include the full query phrase and its individual words
-        if (primary) {
-            expanded.add(primary);
-        }
-        words.forEach(w => expanded.add(w));
-        
-        // For each synonym group, check if the full query OR any word matches
-        Object.entries(this.synonyms).forEach(([key, synonymArray]) => {
-            const allTerms = [key, ...synonymArray].map(t => t.toLowerCase());
-            
-            const matchesFullQuery = allTerms.includes(primary);
-            const matchesAnyWord = words.some(w => allTerms.includes(w));
-            
-            if (matchesFullQuery || matchesAnyWord) {
-                allTerms.forEach(t => {
-                    if (t) expanded.add(t);
-                });
-            }
+
+        terms.forEach(term => {
+            // Add original term
+            expanded.add(term);
+
+            // Find all synonym groups containing this term
+            Object.entries(this.synonyms).forEach(([key, synonymArray]) => {
+                // Check if term matches the key or is in the synonym array
+                if (key === term || synonymArray.includes(term)) {
+                    // Add all synonyms from this group
+                    synonymArray.forEach(syn => expanded.add(syn));
+                }
+            });
         });
-        
-        return { primary, terms: Array.from(expanded) };
+
+        return [...expanded].join(' ');
     }
-    
+
     // SEARCH-ALGORITHM
     search(query, options = {}) {
-        const { primary, terms } = this.expandQuery(query);
+        // Expand query with synonyms
+        const expandedQuery = this.expandQuery(query);
+        const searchTerm = expandedQuery.toLowerCase().trim();
         const results = [];
         const fuzzyMatch = options.fuzzy !== false;
         
-        if (!terms || terms.length === 0) {
-            return results;
-        }
-        
+        // Extract PRAGMA context if provided
+        const context = options.context || null;
+        const hasContext = context && context.active;
+
         for (const page of this.index.pages) {
             let score = 0;
             let matchType = null;
-            let bestTermForSnippet = primary || terms[0];
+            let contextBoosted = false;
             
             const titleLower = page.title.toLowerCase();
             const pageNameLower = page.page_name.toLowerCase();
             const contentLower = page.content;
             const urlLower = page.url.toLowerCase();
             
-            // Evaluate each term independently and accumulate score
-            for (const term of terms) {
-                const termLower = term.toLowerCase().trim();
-                if (!termLower) continue;
-                
-                let termScore = 0;
-                let termMatchType = null;
-                
-                // 1. EXACT TITLE (highest weight)
-                if (titleLower === termLower) {
-                    termScore += 100;
-                    termMatchType = 'exact_title';
-                }
-                // 2. TITLE CONTAINS TERM
-                else if (titleLower.includes(termLower)) {
-                    termScore += 50;
-                    termMatchType = 'title_contains';
-                }
-                
-                // 3. PAGENAME-MATCH (from URL)
-                if (pageNameLower.includes(termLower)) {
-                    termScore += 30;
-                    if (!termMatchType) termMatchType = 'page_name';
-                }
-                
-                // 4. URL-MATCH (important for specific pages)
-                if (urlLower.includes(termLower)) {
-                    termScore += 20;
-                    if (!termMatchType) termMatchType = 'url';
-                }
-                
-                // 5. CONTENT-MATCH
-                const safeTerm = termLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const occurrences = (contentLower.match(new RegExp(safeTerm, 'gi')) || []).length;
-                if (occurrences > 0) {
-                    termScore += occurrences * 2;
-                    if (!termMatchType) termMatchType = 'content';
-                }
-                
-                // 6. FUZZY MATCH (for miss-spellings) – only on the primary query
-                if (fuzzyMatch && termScore === 0 && termLower === primary && primary.length > 0) {
-                    const fuzzyScore = this.fuzzySearch(primary, titleLower) +
-                                      this.fuzzySearch(primary, pageNameLower);
-                    if (fuzzyScore > 0.7) {
-                        termScore += Math.floor(fuzzyScore * 10);
-                        termMatchType = 'fuzzy';
-                    }
-                }
-                
-                if (termScore > 0) {
-                    score += termScore;
-                    // Prefer the first successful term as the "match type" + snippet term
-                    if (!matchType) {
-                        matchType = termMatchType;
-                        bestTermForSnippet = termLower;
-                    }
+            // 1. EXACT TITLE (highest weight)
+            if (titleLower === searchTerm) {
+                score += 100;
+                matchType = 'exact_title';
+            }
+            // 2. TITLE CONTAINS SEARCHTERM
+            else if (titleLower.includes(searchTerm)) {
+                score += 50;
+                matchType = 'title_contains';
+            }
+            
+            // 3. PAGENAME-MATCH (from URL)
+            if (pageNameLower.includes(searchTerm)) {
+                score += 30;
+                if (!matchType) matchType = 'page_name';
+            }
+            
+            // 4. URL-MATCH (important for specific pages)
+            if (urlLower.includes(searchTerm)) {
+                score += 20;
+                if (!matchType) matchType = 'url';
+            }
+            
+            // 5. CONTENT-MATCH
+            const occurrences = (contentLower.match(new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')) || []).length;
+            if (occurrences > 0) {
+                score += occurrences * 2;
+                if (!matchType) matchType = 'content';
+            }
+            
+            // 6. FUZZY MATCH (for miss-spellings)
+            if (fuzzyMatch && score === 0) {
+                const fuzzyScore = this.fuzzySearch(searchTerm, titleLower) +
+                                  this.fuzzySearch(searchTerm, pageNameLower);
+                if (fuzzyScore > 0.7) {
+                    score += Math.floor(fuzzyScore * 10);
+                    matchType = 'fuzzy';
                 }
             }
             
@@ -917,17 +889,51 @@ class ContentIndexer {
                 score += 5;
             }
             
+            // 8. CONTEXT-AWARE BOOSTING (from PRAGMA session)
+            if (score > 0 && hasContext) {
+                const pageContent = (titleLower + ' ' + contentLower).toLowerCase();
+                
+                // Boost if page mentions active services
+                if (context.services && context.services.length > 0) {
+                    context.services.forEach(service => {
+                        if (pageContent.includes(service.toLowerCase())) {
+                            score += 15;
+                            contextBoosted = true;
+                        }
+                    });
+                }
+                
+                // Boost based on current phase
+                if (context.phase) {
+                    const phaseKeywords = {
+                        'initial_recon': ['reconnaissance', 'enumeration', 'discovery', 'scanning'],
+                        'enumeration': ['enum', 'list', 'users', 'shares', 'services'],
+                        'exploitation': ['exploit', 'vulnerability', 'rce', 'shell', 'payload'],
+                        'privilege_escalation': ['privesc', 'sudo', 'suid', 'root', 'admin', 'elevation'],
+                        'lateral_movement': ['lateral', 'pivot', 'smb', 'pass the hash', 'kerberos']
+                    };
+                    
+                    const keywords = phaseKeywords[context.phase] || [];
+                    keywords.forEach(keyword => {
+                        if (pageContent.includes(keyword)) {
+                            score += 10;
+                            contextBoosted = true;
+                        }
+                    });
+                }
+            }
+
             if (score > 0) {
-                const snippetTerm = primary || bestTermForSnippet;
                 results.push({
                     ...page,
                     relevance_score: score,
                     match_type: matchType,
-                    snippet: this.extractSnippet(page.content, snippetTerm)
+                    snippet: this.extractSnippet(page.content, searchTerm),
+                    context_boosted: contextBoosted
                 });
             }
         }
-        
+
         results.sort((a, b) => b.relevance_score - a.relevance_score);
         
         return results;
@@ -1231,7 +1237,7 @@ if (require.main === module) {
             });
             console.log();
         } else {
-            console.log('\n📚 ENGRAM Bnowledge Base Indexer\n');
+            console.log('\n📚 ENGRAM\n');
             console.log('Usage:');
             console.log('  node indexer.js build              - Rebuild entire index');
             console.log('  node indexer.js cache              - Cache offline sources');

@@ -22,7 +22,7 @@ const path = require('path');
 const ContentIndexer = require('./indexer');
 
 const app = express();
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -57,7 +57,7 @@ async function startServer() {
 
     // Start server after index is loaded
     app.listen(PORT, () => {
-        console.log(`✅ Pentest Knowledge Base Indexer server started`);
+        console.log(`✅ ENGRAM server started`);
         console.log(`🌐 Server is being run at:  http://localhost:${PORT}`);
         console.log(`📂 Open http://localhost:${PORT} in your web-browser\n`);
         

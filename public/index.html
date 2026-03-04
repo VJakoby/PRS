@@ -1,22 +1,3 @@
-<!-- 
-/**
- * ENGRAM
- * Copyright (C) 2026 VJakoby
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * ENGRAM is architected by VJakoby + 🤖. This program is distributed in 
- * the hope that it will be useful, but WITHOUT ANY WARRANTY; without even 
- * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
- */
--->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -75,8 +56,7 @@
             color: var(--text-primary);
             min-height: 100vh;
             transition: background-color 0.3s ease, color 0.3s ease;
-            line-height: 1.45;
-            font-size: 13px;
+            line-height: 1.6;
         }
 
         .container {
@@ -90,9 +70,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 24px 0;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 28px;
+            padding: 32px 0;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 40px;
         }
 
         .logo {
@@ -102,8 +82,8 @@
         }
 
         .logo-icon {
-            width: 64px;
-            height: 32px;
+            width: 40px;
+            height: 40px;
             background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
             border-radius: 4px;
             display: flex;
@@ -113,7 +93,7 @@
         }
 
         .logo-text h1 {
-            font-size: 18px;
+            font-size: 24px;
             font-weight: 700;
             color: var(--text-primary);
             letter-spacing: -0.5px;
@@ -121,7 +101,7 @@
         }
 
         .logo-text p {
-            font-size: 11px;
+            font-size: 13px;
             color: var(--text-secondary);
             font-weight: 500;
             margin: 0;
@@ -131,10 +111,10 @@
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
-            padding: 8px 14px;
+            padding: 10px 18px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 600;
             transition: all 0.2s;
             display: flex;
@@ -152,13 +132,130 @@
             font-weight: 600;
         }
 
+        /* PRAGMA Context Banner */
+        .pragma-banner {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(124, 58, 237, 0.05));
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-radius: 4px;
+            padding: 14px 20px;
+            margin-bottom: 20px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .pragma-banner-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .pragma-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        
+        .pragma-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .pragma-target-info, .pragma-phase-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+        
+        .pragma-label {
+            color: var(--text-secondary);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        
+        .pragma-target {
+            font-family: 'IBM Plex Mono', 'SF Mono', 'Consolas', monospace;
+            background: rgba(124, 58, 237, 0.15);
+            padding: 2px 8px;
+            border-radius: 3px;
+            color: var(--accent-purple);
+            font-weight: 600;
+            font-size: 12px;
+        }
+        
+        .pragma-domain {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+        
+        .pragma-phase {
+            background: rgba(52, 211, 153, 0.15);
+            color: var(--accent-green);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+        
+        .pragma-services {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        
+        .pragma-service-tag {
+            background: var(--bg-tertiary);
+            color: var(--accent-purple);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+        }
+        
+        .pragma-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: auto;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        
+        .pragma-status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .pragma-status-text {
+            font-weight: 600;
+        }
+
         /* Search Section - Prominent box */
         .search-section {
             background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
+            border: 2px solid var(--border-color);
             border-radius: 4px;
-            padding: 18px;
-            margin-bottom: 20px;
+            padding: 32px;
+            margin-bottom: 32px;
         }
 
         .search-box {
@@ -167,8 +264,8 @@
 
         #searchInput {
             width: 100%;
-            padding: 8px 12px;
-            font-size: 13px;
+            padding: 16px 20px;
+            font-size: 16px;
             background: var(--bg-primary);
             border: 2px solid var(--border-color);
             border-radius: 4px;
@@ -184,16 +281,16 @@
 
         .search-hint {
             color: var(--text-secondary);
-            font-size: 12px;
-            margin-top: 8px;
+            font-size: 13px;
+            margin-top: 12px;
             text-align: center;
         }
 
         /* Filter Pills - Squared buttons */
         .filters {
             display: flex;
-            gap: 10px;
-            margin-top: 18px;
+            gap: 14px;
+            margin-top: 24px;
             flex-wrap: wrap;
             justify-content: center;
         }
@@ -205,7 +302,7 @@
         }
 
         .filter-label {
-            font-size: 11px;
+            font-size: 13px;
             font-weight: 600;
             color: var(--text-secondary);
             text-transform: uppercase;
@@ -223,12 +320,12 @@
         }
 
         .filter-group label span {
-            padding: 5px 10px;
+            padding: 8px 16px;
             background: var(--bg-primary);
             border: 2px solid var(--border-color);
             border-radius: 4px;
             color: var(--text-secondary);
-            font-size: 11px;
+            font-size: 13px;
             font-weight: 600;
             transition: all 0.2s;
             display: inline-block;
@@ -297,14 +394,14 @@
         .results {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 14px;
         }
 
         .result-item {
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            padding: 16px;
+            padding: 20px;
             transition: all 0.2s;
             position: relative;
         }
@@ -333,7 +430,7 @@
         }
 
         .result-title {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 700;
             color: var(--text-primary);
             margin-bottom: 4px;
@@ -342,7 +439,7 @@
 
         .result-page-name {
             color: var(--accent-blue);
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 500;
         }
 
@@ -371,6 +468,18 @@
             background: rgba(16, 185, 129, 0.2);
             color: var(--accent-green);
         }
+        
+        .badge-context-boost {
+            background: rgba(124, 58, 237, 0.2);
+            color: var(--accent-purple);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            animation: contextPulse 2s infinite;
+        }
+        
+        @keyframes contextPulse {
+            0%, 100% { box-shadow: 0 0 0 rgba(124, 58, 237, 0.4); }
+            50% { box-shadow: 0 0 8px rgba(124, 58, 237, 0.6); }
+        }
 
         .result-source {
             color: var(--text-secondary);
@@ -384,11 +493,11 @@
         .result-snippet {
             background: var(--bg-primary);
             border-left: 3px solid var(--accent-blue);
-            padding: 10px 14px;
-            margin: 12px 0;
+            padding: 12px 16px;
+            margin: 16px 0;
             color: var(--text-secondary);
-            font-size: 13px;
-            line-height: 1.5;
+            font-size: 14px;
+            line-height: 1.6;
             border-radius: 0 4px 4px 0;
         }
 
@@ -411,10 +520,10 @@
             display: inline-block;
             background: var(--accent-blue);
             color: white;
-            padding: 8px 16px;
+            padding: 10px 20px;
             border-radius: 4px;
             text-decoration: none;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 600;
             transition: all 0.2s;
             border: none;
@@ -453,11 +562,11 @@
         /* Tips Section */
         .tips {
             text-align: center;
-            padding: 48px 16px;
+            padding: 80px 20px;
         }
 
         .tips-title {
-            font-size: 20px;
+            font-size: 24px;
             font-weight: 700;
             color: var(--text-primary);
             margin-bottom: 32px;
@@ -466,7 +575,7 @@
         .tips-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
+            gap: 14px;
             max-width: 900px;
             margin: 0 auto;
         }
@@ -475,7 +584,7 @@
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            padding: 16px;
+            padding: 20px;
             text-align: left;
         }
 
@@ -510,8 +619,8 @@
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            padding: 16px;
-            margin-top: 32px;
+            padding: 20px;
+            margin-top: 48px;
         }
 
         .sources-header {
@@ -539,7 +648,7 @@
 
         .sources-title {
             color: var(--text-primary);
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 700;
             display: flex;
             align-items: center;
@@ -574,7 +683,7 @@
             background: var(--bg-primary);
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            padding: 16px;
+            padding: 20px;
             transition: all 0.2s;
             position: relative;
         }
@@ -625,7 +734,7 @@
         .source-name {
             color: var(--text-primary);
             font-weight: 700;
-            font-size: 14px;
+            font-size: 16px;
             margin-bottom: 4px;
         }
 
@@ -643,14 +752,14 @@
 
         .source-desc {
             color: var(--text-secondary);
-            font-size: 12px;
-            margin-top: 6px;
+            font-size: 13px;
+            margin-top: 8px;
         }
 
         .source-pages {
             color: var(--text-secondary);
-            font-size: 12px;
-            margin-top: 10px;
+            font-size: 13px;
+            margin-top: 12px;
         }
 
         /* Keyboard hint */
@@ -938,16 +1047,32 @@
         <!-- Header with Logo -->
         <div class="header">
             <div class="logo">
-                <div class="logo-icon">🔎📖</div>
+                <div class="logo-icon">📖</div>
                 <div class="logo-text">
                     <h1>ENGRAM</h1>
-                    <p>Knowledge Base Indexer</p>
+                    <p>Knowledge-Base-indexer</p>
                 </div>
             </div>
             <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
                 <span id="themeIcon">☀️</span>
                 <span class="theme-toggle-text" id="themeText">Light</span>
             </button>
+        </div>
+
+        <!-- PRAGMA Context Banner -->
+        <div id="pragmaBanner" class="pragma-banner" style="display: none;">
+            <div class="pragma-banner-content">
+                <div class="pragma-icon">🎯</div>
+                <div class="pragma-info">
+                    <div id="pragmaTargetInfo" class="pragma-target-info"></div>
+                    <div id="pragmaPhaseInfo" class="pragma-phase-info" style="display: none;"></div>
+                </div>
+                <div id="pragmaServices" class="pragma-services" style="display: none;"></div>
+                <div class="pragma-status">
+                    <span class="pragma-status-dot"></span>
+                    <span class="pragma-status-text">PRAGMA Connected</span>
+                </div>
+            </div>
         </div>
 
         <!-- Search Section -->
@@ -1114,6 +1239,17 @@
         let disabledSources = new Set(
             JSON.parse(localStorage.getItem('disabledSources') || '[]')
         );
+
+        // ── PRAGMA Integration ────────────────────────────────
+        let pragmaContext = {
+            active: false,
+            session: null,
+            target: null,
+            services: [],
+            phase: null
+        };
+        let pragmaContextLastFetch = 0;
+        const PRAGMA_CONTEXT_TTL = 10000; // Refresh every 10s
 
         // ── Theme ──────────────────────────────────────────────
         const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -1400,10 +1536,91 @@
             }
         });
 
+        // ── PRAGMA Context Integration ────────────────────────
+        async function fetchPragmaContext() {
+            const now = Date.now();
+            
+            // Return cached if fresh
+            if (pragmaContext.active && (now - pragmaContextLastFetch) < PRAGMA_CONTEXT_TTL) {
+                return pragmaContext;
+            }
+            
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 800);
+                
+                const response = await fetch('/api/pragma/context', {
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeout);
+                
+                if (response.ok) {
+                    const context = await response.json();
+                    pragmaContext = context;
+                    pragmaContextLastFetch = now;
+                    updatePragmaUI(context);
+                    return context;
+                }
+            } catch (error) {
+                // PRAGMA not available - silent fail
+                console.debug('PRAGMA not connected');
+            }
+            
+            // Return inactive context
+            pragmaContext = { active: false, session: null, target: null, services: [], phase: null };
+            updatePragmaUI(pragmaContext);
+            return pragmaContext;
+        }
+        
+        function updatePragmaUI(context) {
+            const banner = document.getElementById('pragmaBanner');
+            if (!banner) return;
+            
+            if (context.active && context.target) {
+                banner.style.display = 'flex';
+                const targetInfo = document.getElementById('pragmaTargetInfo');
+                const phaseInfo = document.getElementById('pragmaPhaseInfo');
+                
+                targetInfo.innerHTML = `
+                    <span class="pragma-label">Target:</span>
+                    <code class="pragma-target">${escapeHtml(context.target.ip || 'N/A')}</code>
+                    ${context.target.domain ? `<span class="pragma-domain">${escapeHtml(context.target.domain)}</span>` : ''}
+                `;
+                
+                if (context.phase) {
+                    phaseInfo.innerHTML = `
+                        <span class="pragma-label">Phase:</span>
+                        <span class="pragma-phase">${escapeHtml(context.phase.replace(/_/g, ' '))}</span>
+                    `;
+                    phaseInfo.style.display = 'flex';
+                } else {
+                    phaseInfo.style.display = 'none';
+                }
+                
+                // Show active services as tags if any
+                const servicesDiv = document.getElementById('pragmaServices');
+                if (context.services && context.services.length > 0) {
+                    servicesDiv.innerHTML = context.services.slice(0, 5).map(s => 
+                        `<span class="pragma-service-tag">${escapeHtml(s)}</span>`
+                    ).join('');
+                    servicesDiv.style.display = 'flex';
+                } else {
+                    servicesDiv.style.display = 'none';
+                }
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
         async function performSearch(query) {
             loadingDiv.style.display = 'block';
             resultsDiv.innerHTML = '';
             resultsInfo.style.display = 'none';
+            
+            // Fetch PRAGMA context first (non-blocking)
+            await fetchPragmaContext();
+            
             try {
                 const response = await fetch('/api/search', {
                     method: 'POST',
@@ -1480,6 +1697,11 @@
                         snippetHTML = `<div class="result-snippet">${escapeHtml(result.snippet.text)}</div>`;
                     }
                 }
+                
+                // Context boost indicator
+                const contextBoostBadge = result.context_boosted 
+                    ? '<span class="badge badge-context-boost" title="Boosted by PRAGMA context">🎯 Context</span>'
+                    : '';
 
                 return `
                 <div class="result-item">
@@ -1490,6 +1712,7 @@
                         </div>
                         <div class="result-badges">
                             ${badge}
+                            ${contextBoostBadge}
                             <span class="badge badge-score">${result.relevance_score}</span>
                             <span class="badge badge-match">${formatMatchType(result.match_type)}</span>
                         </div>
@@ -1522,7 +1745,13 @@
             return text.replace(/[&<>"']/g, m => map[m]);
         }
 
-        window.addEventListener('load', () => { searchInput.focus(); });
+        window.addEventListener('load', () => { 
+            searchInput.focus();
+            // Fetch PRAGMA context on page load
+            fetchPragmaContext();
+            // Refresh context every 30 seconds
+            setInterval(fetchPragmaContext, 30000);
+        });
         loadSources();
         searchInput.addEventListener('focus', () => {
             if (!searchInput.value) tipsDiv.style.display = 'block';
