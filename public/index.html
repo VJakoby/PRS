@@ -1050,7 +1050,7 @@
                 <div class="logo-icon">📖</div>
                 <div class="logo-text">
                     <h1>ENGRAM</h1>
-                    <p>Knowledge-Base-indexer</p>
+                    <p>KB-indexer</p>
                 </div>
             </div>
             <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
@@ -1065,9 +1065,7 @@
                 <div class="pragma-icon">🎯</div>
                 <div class="pragma-info">
                     <div id="pragmaTargetInfo" class="pragma-target-info"></div>
-                    <div id="pragmaPhaseInfo" class="pragma-phase-info" style="display: none;"></div>
                 </div>
-                <div id="pragmaServices" class="pragma-services" style="display: none;"></div>
                 <div class="pragma-status">
                     <span class="pragma-status-dot"></span>
                     <span class="pragma-status-text">PRAGMA Connected</span>
@@ -1243,13 +1241,21 @@
         // ── PRAGMA Integration ────────────────────────────────
         let pragmaContext = {
             active: false,
-            session: null,
-            target: null,
-            services: [],
-            phase: null
+            target: null
         };
         let pragmaContextLastFetch = 0;
         const PRAGMA_CONTEXT_TTL = 10000; // Refresh every 10s
+        
+        // Read PRAGMA's session state from localStorage
+        function getPragmaState() {
+            try {
+                const sessionId = localStorage.getItem('ops-active-session');
+                const targetId = localStorage.getItem('ops-active-target');
+                return { sessionId, targetId };
+            } catch {
+                return { sessionId: null, targetId: null };
+            }
+        }
 
         // ── Theme ──────────────────────────────────────────────
         const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -1545,12 +1551,25 @@
                 return pragmaContext;
             }
             
+            // Get PRAGMA session state from localStorage
+            const { sessionId, targetId } = getPragmaState();
+            
+            // No active session in PRAGMA
+            if (!sessionId) {
+                pragmaContext = { active: false, target: null };
+                updatePragmaUI(pragmaContext);
+                return pragmaContext;
+            }
+            
             try {
                 const controller = new AbortController();
                 const timeout = setTimeout(() => controller.abort(), 800);
                 
                 const response = await fetch('/api/pragma/context', {
-                    signal: controller.signal
+                    method: 'POST',
+                    signal: controller.signal,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sessionId, target_id: targetId })
                 });
                 
                 clearTimeout(timeout);
@@ -1563,12 +1582,11 @@
                     return context;
                 }
             } catch (error) {
-                // PRAGMA not available - silent fail
-                console.debug('PRAGMA not connected');
+                console.debug('PRAGMA not connected:', error.message);
             }
             
-            // Return inactive context
-            pragmaContext = { active: false, session: null, target: null, services: [], phase: null };
+            // PRAGMA not available
+            pragmaContext = { active: false, target: null };
             updatePragmaUI(pragmaContext);
             return pragmaContext;
         }
@@ -1580,34 +1598,12 @@
             if (context.active && context.target) {
                 banner.style.display = 'flex';
                 const targetInfo = document.getElementById('pragmaTargetInfo');
-                const phaseInfo = document.getElementById('pragmaPhaseInfo');
                 
                 targetInfo.innerHTML = `
                     <span class="pragma-label">Target:</span>
                     <code class="pragma-target">${escapeHtml(context.target.ip || 'N/A')}</code>
                     ${context.target.domain ? `<span class="pragma-domain">${escapeHtml(context.target.domain)}</span>` : ''}
                 `;
-                
-                if (context.phase) {
-                    phaseInfo.innerHTML = `
-                        <span class="pragma-label">Phase:</span>
-                        <span class="pragma-phase">${escapeHtml(context.phase.replace(/_/g, ' '))}</span>
-                    `;
-                    phaseInfo.style.display = 'flex';
-                } else {
-                    phaseInfo.style.display = 'none';
-                }
-                
-                // Show active services as tags if any
-                const servicesDiv = document.getElementById('pragmaServices');
-                if (context.services && context.services.length > 0) {
-                    servicesDiv.innerHTML = context.services.slice(0, 5).map(s => 
-                        `<span class="pragma-service-tag">${escapeHtml(s)}</span>`
-                    ).join('');
-                    servicesDiv.style.display = 'flex';
-                } else {
-                    servicesDiv.style.display = 'none';
-                }
             } else {
                 banner.style.display = 'none';
             }
@@ -1618,14 +1614,22 @@
             resultsDiv.innerHTML = '';
             resultsInfo.style.display = 'none';
             
-            // Fetch PRAGMA context first (non-blocking)
+            // Fetch PRAGMA context first
             await fetchPragmaContext();
+            
+            // Get PRAGMA state for search request
+            const { sessionId, targetId } = getPragmaState();
             
             try {
                 const response = await fetch('/api/search', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query, fuzzyMode: fuzzyMode })
+                    body: JSON.stringify({ 
+                        query, 
+                        fuzzyMode: fuzzyMode,
+                        session_id: sessionId,
+                        target_id: targetId
+                    })
                 });
                 const data = await response.json();
                 loadingDiv.style.display = 'none';
@@ -1697,11 +1701,6 @@
                         snippetHTML = `<div class="result-snippet">${escapeHtml(result.snippet.text)}</div>`;
                     }
                 }
-                
-                // Context boost indicator
-                const contextBoostBadge = result.context_boosted 
-                    ? '<span class="badge badge-context-boost" title="Boosted by PRAGMA context">🎯 Context</span>'
-                    : '';
 
                 return `
                 <div class="result-item">
@@ -1712,7 +1711,6 @@
                         </div>
                         <div class="result-badges">
                             ${badge}
-                            ${contextBoostBadge}
                             <span class="badge badge-score">${result.relevance_score}</span>
                             <span class="badge badge-match">${formatMatchType(result.match_type)}</span>
                         </div>
