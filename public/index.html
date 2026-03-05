@@ -1,3 +1,22 @@
+<!--
+/**
+ * ENGRAM
+ * Copyright (C) 2026 VJakoby
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * ENGRAM is architected by VJakoby + 🤖. This program is distributed in 
+ * the hope that it will be useful, but WITHOUT ANY WARRANTY; without even 
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+-->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -132,122 +151,6 @@
             font-weight: 600;
         }
 
-        /* PRAGMA Context Banner */
-        .pragma-banner {
-            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(124, 58, 237, 0.05));
-            border: 1px solid rgba(124, 58, 237, 0.3);
-            border-radius: 4px;
-            padding: 14px 20px;
-            margin-bottom: 20px;
-            animation: slideIn 0.3s ease;
-        }
-        
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .pragma-banner-content {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-        
-        .pragma-icon {
-            font-size: 24px;
-            flex-shrink: 0;
-        }
-        
-        .pragma-info {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            flex: 1;
-            min-width: 200px;
-        }
-        
-        .pragma-target-info, .pragma-phase-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-        }
-        
-        .pragma-label {
-            color: var(--text-secondary);
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-        }
-        
-        .pragma-target {
-            font-family: 'IBM Plex Mono', 'SF Mono', 'Consolas', monospace;
-            background: rgba(124, 58, 237, 0.15);
-            padding: 2px 8px;
-            border-radius: 3px;
-            color: var(--accent-purple);
-            font-weight: 600;
-            font-size: 12px;
-        }
-        
-        .pragma-domain {
-            color: var(--text-secondary);
-            font-size: 12px;
-        }
-        
-        .pragma-phase {
-            background: rgba(52, 211, 153, 0.15);
-            color: var(--accent-green);
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: capitalize;
-        }
-        
-        .pragma-services {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-        
-        .pragma-service-tag {
-            background: var(--bg-tertiary);
-            color: var(--accent-purple);
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 11px;
-            font-weight: 600;
-            border: 1px solid rgba(124, 58, 237, 0.2);
-        }
-        
-        .pragma-status {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-left: auto;
-            font-size: 11px;
-            color: var(--text-secondary);
-        }
-        
-        .pragma-status-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--accent-green);
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        .pragma-status-text {
-            font-weight: 600;
-        }
 
         /* Search Section - Prominent box */
         .search-section {
@@ -285,6 +188,7 @@
             margin-top: 12px;
             text-align: center;
         }
+        
 
         /* Filter Pills - Squared buttons */
         .filters {
@@ -1050,27 +954,13 @@
                 <div class="logo-icon">📖</div>
                 <div class="logo-text">
                     <h1>ENGRAM</h1>
-                    <p>KB-indexer</p>
+                    <p>Knowledge-Based Indexer</p>
                 </div>
             </div>
             <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
                 <span id="themeIcon">☀️</span>
                 <span class="theme-toggle-text" id="themeText">Light</span>
             </button>
-        </div>
-
-        <!-- PRAGMA Context Banner -->
-        <div id="pragmaBanner" class="pragma-banner" style="display: none;">
-            <div class="pragma-banner-content">
-                <div class="pragma-icon">🎯</div>
-                <div class="pragma-info">
-                    <div id="pragmaTargetInfo" class="pragma-target-info"></div>
-                </div>
-                <div class="pragma-status">
-                    <span class="pragma-status-dot"></span>
-                    <span class="pragma-status-text">PRAGMA Connected</span>
-                </div>
-            </div>
         </div>
 
         <!-- Search Section -->
@@ -1237,25 +1127,6 @@
         let disabledSources = new Set(
             JSON.parse(localStorage.getItem('disabledSources') || '[]')
         );
-
-        // ── PRAGMA Integration ────────────────────────────────
-        let pragmaContext = {
-            active: false,
-            target: null
-        };
-        let pragmaContextLastFetch = 0;
-        const PRAGMA_CONTEXT_TTL = 10000; // Refresh every 10s
-        
-        // Read PRAGMA's session state from localStorage
-        function getPragmaState() {
-            try {
-                const sessionId = localStorage.getItem('ops-active-session');
-                const targetId = localStorage.getItem('ops-active-target');
-                return { sessionId, targetId };
-            } catch {
-                return { sessionId: null, targetId: null };
-            }
-        }
 
         // ── Theme ──────────────────────────────────────────────
         const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -1542,83 +1413,10 @@
             }
         });
 
-        // ── PRAGMA Context Integration ────────────────────────
-        async function fetchPragmaContext() {
-            const now = Date.now();
-            
-            // Return cached if fresh
-            if (pragmaContext.active && (now - pragmaContextLastFetch) < PRAGMA_CONTEXT_TTL) {
-                return pragmaContext;
-            }
-            
-            // Get PRAGMA session state from localStorage
-            const { sessionId, targetId } = getPragmaState();
-            
-            // No active session in PRAGMA
-            if (!sessionId) {
-                pragmaContext = { active: false, target: null };
-                updatePragmaUI(pragmaContext);
-                return pragmaContext;
-            }
-            
-            try {
-                const controller = new AbortController();
-                const timeout = setTimeout(() => controller.abort(), 800);
-                
-                const response = await fetch('/api/pragma/context', {
-                    method: 'POST',
-                    signal: controller.signal,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ session_id: sessionId, target_id: targetId })
-                });
-                
-                clearTimeout(timeout);
-                
-                if (response.ok) {
-                    const context = await response.json();
-                    pragmaContext = context;
-                    pragmaContextLastFetch = now;
-                    updatePragmaUI(context);
-                    return context;
-                }
-            } catch (error) {
-                console.debug('PRAGMA not connected:', error.message);
-            }
-            
-            // PRAGMA not available
-            pragmaContext = { active: false, target: null };
-            updatePragmaUI(pragmaContext);
-            return pragmaContext;
-        }
-        
-        function updatePragmaUI(context) {
-            const banner = document.getElementById('pragmaBanner');
-            if (!banner) return;
-            
-            if (context.active && context.target) {
-                banner.style.display = 'flex';
-                const targetInfo = document.getElementById('pragmaTargetInfo');
-                
-                targetInfo.innerHTML = `
-                    <span class="pragma-label">Target:</span>
-                    <code class="pragma-target">${escapeHtml(context.target.ip || 'N/A')}</code>
-                    ${context.target.domain ? `<span class="pragma-domain">${escapeHtml(context.target.domain)}</span>` : ''}
-                `;
-            } else {
-                banner.style.display = 'none';
-            }
-        }
-
         async function performSearch(query) {
             loadingDiv.style.display = 'block';
             resultsDiv.innerHTML = '';
             resultsInfo.style.display = 'none';
-            
-            // Fetch PRAGMA context first
-            await fetchPragmaContext();
-            
-            // Get PRAGMA state for search request
-            const { sessionId, targetId } = getPragmaState();
             
             try {
                 const response = await fetch('/api/search', {
@@ -1626,9 +1424,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         query, 
-                        fuzzyMode: fuzzyMode,
-                        session_id: sessionId,
-                        target_id: targetId
+                        fuzzyMode: fuzzyMode
                     })
                 });
                 const data = await response.json();
@@ -1745,10 +1541,6 @@
 
         window.addEventListener('load', () => { 
             searchInput.focus();
-            // Fetch PRAGMA context on page load
-            fetchPragmaContext();
-            // Refresh context every 30 seconds
-            setInterval(fetchPragmaContext, 30000);
         });
         loadSources();
         searchInput.addEventListener('focus', () => {

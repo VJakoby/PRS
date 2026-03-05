@@ -22,7 +22,7 @@ const path = require('path');
 const ContentIndexer = require('./indexer');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3002;
 
 app.use(cors());
 app.use(express.json());
@@ -78,129 +78,9 @@ app.get('/api/status', (req, res) => {
     });
 });
 
-// ═══════════════════════════════════════════════
-// PRAGMA INTEGRATION - Target Context
-// ═══════════════════════════════════════════════
-const PRAGMA_URL = process.env.PRAGMA_URL || 'http://localhost:3000';
-const CONTEXT_CACHE_TTL = 5000; // 5 seconds
-
-let cachedContext = null;
-let cacheTimestamp = 0;
-
-async function fetchPragmaContext(sessionId, targetId) {
-  const now = Date.now();
-  
-  if (cachedContext && (now - cacheTimestamp) < CONTEXT_CACHE_TTL) {
-    return cachedContext;
-  }
-  
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 1000);
-    
-    const response = await fetch(`${PRAGMA_URL}/api/engram/context`, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Accept': 'application/json' 
-      },
-      body: JSON.stringify({ 
-        session_id: sessionId, 
-        target_id: targetId 
-      })
-    });
-    
-    clearTimeout(timeout);
-    
-    if (!response.ok) {
-      throw new Error(`PRAGMA returned ${response.status}`);
-    }
-    
-    const context = await response.json();
-    cachedContext = context;
-    cacheTimestamp = now;
-    
-    return context;
-    
-  } catch (error) {
-    console.debug(`[ENGRAM] PRAGMA not available: ${error.message}`);
-    return { active: false, target: null };
-  }
-}
-
-function injectTargetValues(text, target) {
-  if (!target || !target.ip) return text;
-  
-  const shellEscape = (str) => {
-    if (!str) return '';
-    return String(str).replace(/[;&|`$(){}[\]<>'"\\]/g, '');
-  };
-  
-  const safeIP = shellEscape(target.ip);
-  const safeDomain = shellEscape(target.domain || '');
-  
-  let injected = text;
-  
-  // IP placeholders
-  injected = injected.replace(/&lt;IP&gt;/g, safeIP);
-  injected = injected.replace(/<IP>/g, safeIP);
-  injected = injected.replace(/\$IP\b/g, safeIP);
-  injected = injected.replace(/\$TARGET_IP\b/g, safeIP);
-  injected = injected.replace(/\$RHOST\b/g, safeIP);
-  injected = injected.replace(/\{IP\}/g, safeIP);
-  
-  // Domain placeholders
-  if (safeDomain) {
-    injected = injected.replace(/&lt;DOMAIN&gt;/g, safeDomain);
-    injected = injected.replace(/<DOMAIN>/g, safeDomain);
-    injected = injected.replace(/\$DOMAIN\b/g, safeDomain);
-    injected = injected.replace(/\{DOMAIN\}/g, safeDomain);
-  }
-  
-  return injected;
-}
-
-// API: Get PRAGMA context (for frontend)
-app.post('/api/pragma/context', async (req, res) => {
-  const { session_id, target_id } = req.body;
-  const context = await fetchPragmaContext(session_id, target_id);
-  res.json(context);
-});
-
-// API: Manual injection endpoint
-app.post('/api/pragma/inject', async (req, res) => {
-  const { text, session_id, target_id } = req.body;
-  
-  if (!text || typeof text !== 'string') {
-    return res.status(400).json({ error: 'Missing text parameter' });
-  }
-  
-  if (text.length > 50000) {
-    return res.status(400).json({ error: 'Text too large' });
-  }
-  
-  const context = await fetchPragmaContext(session_id, target_id);
-  
-  if (!context.active || !context.target) {
-    return res.json({ injected: text, changes: false });
-  }
-  
-  const injected = injectTargetValues(text, context.target);
-  
-  res.json({
-    injected: injected,
-    changes: injected !== text,
-    context: {
-      ip: context.target.ip,
-      domain: context.target.domain
-    }
-  });
-});
-
 // API: Sök
 app.post('/api/search', async (req, res) => {
-    const { query, fuzzy = true, fuzzy_prefer = false, session_id, target_id } = req.body;
+    const { query, fuzzy = true, fuzzy_prefer = false } = req.body;
     
     if (!indexReady) {
         return res.status(503).json({
@@ -216,44 +96,22 @@ app.post('/api/search', async (req, res) => {
 
     try {
         const startTime = Date.now();
-        
-        // Fetch PRAGMA context (non-blocking, cached)
-        const context = session_id && target_id 
-          ? await fetchPragmaContext(session_id, target_id)
-          : { active: false, target: null };
-        
         const results = indexer.search(query, { fuzzy, fuzzy_prefer });
         const searchTime = Date.now() - startTime;
         
-        // Inject target into snippets
-        const topResults = results.slice(0, 50).map(r => {
-            const injected = { ...r };
-            
-            // Inject into snippet if PRAGMA is active
-            if (injected.snippet && context.target) {
-                if (typeof injected.snippet === 'string') {
-                    injected.snippet = injectTargetValues(injected.snippet, context.target);
-                } else if (injected.snippet && injected.snippet.text) {
-                    injected.snippet = {
-                        ...injected.snippet,
-                        text: injectTargetValues(injected.snippet.text, context.target)
-                    };
-                }
-            }
-            
-            return {
-                source_name: injected.source_name,
-                source_id: injected.source_id,
-                title: injected.title,
-                page_name: injected.page_name,
-                url: injected.url,
-                file_path: injected.file_path,
-                relevance_score: injected.relevance_score,
-                match_type: injected.match_type,
-                snippet: injected.snippet,
-                is_local: injected.is_local
-            };
-        });
+        // Top 50 results
+        const topResults = results.slice(0, 50).map(r => ({
+            source_name: r.source_name,
+            source_id: r.source_id,
+            title: r.title,
+            page_name: r.page_name,
+            url: r.url,
+            file_path: r.file_path,
+            relevance_score: r.relevance_score,
+            match_type: r.match_type,
+            snippet: r.snippet,
+            is_local: r.is_local
+        }));
 
         res.json({
             results: topResults,
@@ -261,12 +119,7 @@ app.post('/api/search', async (req, res) => {
             total_matches: results.length,
             query: query,
             search_time_ms: searchTime,
-            total_searched: indexer.index.pages.length,
-            // Include target info for frontend banner
-            pragma_context: context.active ? {
-                ip: context.target?.ip,
-                domain: context.target?.domain
-            } : null
+            total_searched: indexer.index.pages.length
         });
     } catch (error) {
         console.error('Search error:', error);
@@ -493,6 +346,5 @@ app.get('/health', (req, res) => {
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-    console.log('🛑 Shutting down server...');
-    process.exit(0);
+    console.log('🛑 Shutting down server...');    process.exit(0);
 });
