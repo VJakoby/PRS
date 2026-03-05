@@ -85,7 +85,7 @@
       "type": "gitbook",
       "index_url": "https://www.verylazytech.com/",
       "search_url": "https://www.verylazytech.com/?q={query}",
-      "enabled": false,
+      "enabled": true,
       "description": "Pentesting notes and guides"
     },
     {

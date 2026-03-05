@@ -1,6 +1,6 @@
 {
     "ssh": ["secure shell", "22/tcp", "remote shell", "ssh service"],
-    "smb": ["server message block", "445/tcp", "cifs", "windows file sharing"],
+    "smb": ["server message block", "445/tcp", "cifs", "SMB", "smb", "windows file sharing"],
     "rdp": ["remote desktop", "3389/tcp", "terminal services", "mstsc"],
     "ftp": ["file transfer protocol", "21/tcp", "ftp service", "vsftpd"],
     "tftp": ["trivial ftp", "69/udp", "tftp service"],
