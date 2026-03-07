@@ -28,11 +28,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Initiera indexer
 const indexer = new ContentIndexer();
 let indexReady = false;
 
-// Load index and start server
 async function startServer() {
     try {
         await indexer.initialize();
@@ -40,8 +38,7 @@ async function startServer() {
         
         if (info.total_pages > 0) {
             indexReady = true;
-            console.log(`
-✅ Index loaded with ${info.total_pages} pages`);
+            console.log(`✅ Index loaded with ${info.total_pages} pages`);
             console.log(`📅 Last updated: ${info.last_updated || 'Never'}`);
             console.log(`📚 Sources:`);
             info.sources.forEach(s => {
@@ -55,12 +52,9 @@ async function startServer() {
         console.error('❌ Error loading index:', error.message);
     }
 
-    // Start server after index is loaded
     app.listen(PORT, () => {
-        console.log(`✅ Pentest Knowledge Base Indexer server started`);
-        console.log(`🌐 Server is being run at:  http://localhost:${PORT}`);
-        console.log(`📂 Open http://localhost:${PORT} in your web-browser\n`);
-        
+        console.log(`✅ ENGRAM server started`);
+        console.log(`🌐 Server is being run at:  http://localhost:${PORT}`);        
         if (!indexReady) {
             console.log('⚠️  OBS: Index not ready!');
             console.log('   Run: npm run index\n');
@@ -70,7 +64,7 @@ async function startServer() {
 
 startServer();
 
-// API: Get status and sources
+// API: Status and sources
 app.get('/api/status', (req, res) => {
     const info = indexer.getIndexInfo();
     res.json({
@@ -80,9 +74,9 @@ app.get('/api/status', (req, res) => {
     });
 });
 
-// API: Sök
-app.post('/api/search', (req, res) => {
-    const { query, fuzzy = true, fuzzy_prefer = false } = req.body;
+// API: Search
+app.post('/api/search', async (req, res) => {
+    const { query, fuzzy = true } = req.body;
     
     if (!indexReady) {
         return res.status(503).json({
@@ -98,10 +92,9 @@ app.post('/api/search', (req, res) => {
 
     try {
         const startTime = Date.now();
-        const results = indexer.search(query, { fuzzy, fuzzy_prefer });
+        const results = indexer.search(query, { fuzzy });
         const searchTime = Date.now() - startTime;
         
-        // Begränsa till top 50 resultat för bättre prestanda
         const topResults = results.slice(0, 50).map(r => ({
             source_name: r.source_name,
             source_id: r.source_id,
@@ -111,7 +104,7 @@ app.post('/api/search', (req, res) => {
             file_path: r.file_path,
             relevance_score: r.relevance_score,
             match_type: r.match_type,
-            snippet: r.snippet,  // Now includes {text, highlightStart, highlightLength}
+            snippet: r.snippet,
             is_local: r.is_local
         }));
 
@@ -142,7 +135,7 @@ app.get('/api/sources', (req, res) => {
     });
 });
 
-// API: Preview lokal markdown-fil
+// API: Preview local markdown file
 app.get('/api/preview', async (req, res) => {
     const { file } = req.query;
     
@@ -151,16 +144,13 @@ app.get('/api/preview', async (req, res) => {
     }
     
     try {
-        // Security: Only allow files that are in the index
         const page = indexer.index.pages.find(p => p.file_path === file);
         if (!page) {
             return res.status(404).json({ error: 'File not found in index' });
         }
         
         const content = await fs.readFile(file, 'utf-8');
-        
-        // Simple markdown to HTML conversion (basic)
-        const html = simpleMarkdownToHTML(content);
+        const html = convertMarkdownToHTML(content);
         
         res.json({
             title: page.title,
@@ -175,8 +165,7 @@ app.get('/api/preview', async (req, res) => {
     }
 });
 
-// Simple markdown to HTML converter (basic but works)
-function simpleMarkdownToHTML(markdown) {
+function convertMarkdownToHTML(markdown) {
     let html = markdown;
     
     // Headers
@@ -218,7 +207,7 @@ function simpleMarkdownToHTML(markdown) {
     return html;
 }
 
-// API: Incremental update of local file
+// API: Update local file
 app.post('/api/update-file', async (req, res) => {
     const { file } = req.body;
     
@@ -274,7 +263,7 @@ app.post('/api/remove-file', async (req, res) => {
     }
 });
 
-// API: Get cached page (for offline preview)
+// API: Get cached page
 app.get('/api/cached-page', async (req, res) => {
     const { source_id, url } = req.query;
     
@@ -314,11 +303,11 @@ app.get('/api/cache-status', async (req, res) => {
     }
 });
 
-// API: Bygg om index (async)
+// API: Rebuild index
 app.post('/api/rebuild-index', async (req, res) => {
     if (!indexReady) {
         return res.status(503).json({
-            error: 'Indexering pågår redan eller kan inte startas'
+            error: 'Indexing already in progress or cannot start'
         });
     }
 
@@ -333,7 +322,7 @@ app.post('/api/rebuild-index', async (req, res) => {
         console.log('✅ Index rebuilt!');
     } catch (error) {
         console.error('❌ Error during rebuild:', error);
-        indexReady = true; // Reset status
+        indexReady = true;
     }
 });
 
