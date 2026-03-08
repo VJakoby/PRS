@@ -4,7 +4,9 @@ services:
     build: .
     container_name: engram-kb-indexer
     ports:
-      - "127.0.0.1:3002:3002"
+      - "127.0.0.1:3002:3002"    # accessible from host
+    networks:
+      - pragma-net               # accessible internally
     volumes:
       - ./sources.json:/app/sources.json:ro
       - ./data:/app/data
@@ -22,3 +24,4 @@ services:
 
 volumes:
   cache_data:
+  
