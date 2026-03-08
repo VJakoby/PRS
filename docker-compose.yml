@@ -24,4 +24,7 @@ services:
 
 volumes:
   cache_data:
-  
+
+networks:
+  pragma-net:
+    external: true
