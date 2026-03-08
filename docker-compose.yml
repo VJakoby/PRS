@@ -1,14 +1,24 @@
 version: "3.9"
 services:
-  app:
+  engram:
     build: .
-    container_name: engram-knowledge-base-indexer
+    container_name: engram-kb-indexer
     ports:
-      - "3002:3002"
+      - "127.0.0.1:3002:3002"
     volumes:
-      - ./sources.json:/app/sources.json
+      - ./sources.json:/app/sources.json:ro
+      - ./data:/app/data
       - cache_data:/app/cache
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "0.75"
 
 volumes:
   cache_data:
