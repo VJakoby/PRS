@@ -1,4 +1,5 @@
 FROM node:20-alpine
+RUN npm install -g npm@latest
 WORKDIR /app
 
 # Install deps first for layer caching
