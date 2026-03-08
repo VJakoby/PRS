@@ -1,4 +1,4 @@
-# 🔎 ENGRAM-kb-indexer
+# 🔎 ENGRAM-knowledge-base-indexer
 > A fast local tool for searching indexed pages, in this case pentesting documentation, both online and local.
 
 ## Why?

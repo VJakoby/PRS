@@ -1,7 +1,7 @@
 # AI Disclosure & Provenance
 
 ### 🏗️ Architectural Ownership
-The **ENGRAM-Knowledge-Base-Indexer** was conceptualized, architected, and directed by **VJakoby**. 
+The **ENGRAM-knowledge-base-indexer** was conceptualized, architected, and directed by **VJakoby**. 
 
 The human architect defined and oversaw the following core systems:
 * **The Indexing & Scoring Engine:** The strategy for fuzzy search matching and the hierarchical scoring system for search results.
@@ -25,7 +25,7 @@ This repository was developed through iterative collaboration with **Claude 4.6 
 
 - **Public Access:** This tool is designed to interface only with publicly available data and does not bypass authentication, paywalls, or security measures.
 
-- **User Responsibility:** The inclusion of these URLs does not imply an endorsement or a license to scrape. Users are responsible for ensuring that their use of this indexer complies with the specific Terms of Service (ToS) and robots.txt files of the target domains.
+- **User Responsibility:** The inclusion of these URLs does not imply an endorsement or a license to scrape. Users are **responsible** for ensuring that their use of this indexer complies with the specific Terms of Service (ToS) and robots.txt files of the target domains.
 
 - **Fair Use:** The author provides this list for educational and organizational purposes only.
 ---
