@@ -28,4 +28,4 @@ volumes:
 networks:
   pragma-net:
     external: true
-    name: pragma-workbench_pragma-net
+    name: pragma-net
