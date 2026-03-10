@@ -1,12 +1,16 @@
 # Dependencies
 node_modules/
 
+# Sources
+sources.json
+sources copy.json
+
 # Generated index
 data/
 *.meta.json
 
 # Offline notes (uncomment if you want to keep notes private)
-# offline-notes/
+
 
 # Logs
 *.log
