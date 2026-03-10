@@ -24,7 +24,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const cheerio = require('cheerio');
 const crypto = require('crypto');
-const RATE = 500; // Base delay in ms for rate limiting
+const RATE = 1000;
 
 class ContentIndexer {
     constructor() {
@@ -64,9 +64,22 @@ class ContentIndexer {
     async loadSources() {
         const sourcesData = await fs.readFile(this.sourcesPath, 'utf-8');
         const config = JSON.parse(sourcesData);
-        const onlineSources = (config.online_sources || config.sources || []).filter(s => s.enabled);
+        
+        // Get global settings
+        const globalTTL = config.index_settings?.default_ttl_days || 7;
+        
+        const onlineSources = (config.online_sources || config.sources || [])
+            .filter(s => s.enabled)
+            .map(s => ({ ...s, ttl_days: s.ttl_days ?? globalTTL })); // Use source-specific TTL or global default
+            
         const offlineSources = (config.offline_sources || []).filter(s => s.enabled);
-        return { online: onlineSources, offline: offlineSources, all: [...onlineSources, ...offlineSources] };
+        
+        return { 
+            online: onlineSources, 
+            offline: offlineSources, 
+            all: [...onlineSources, ...offlineSources],
+            globalTTL: globalTTL
+        };
     }
 
     resolvePath(configPath) {
@@ -477,44 +490,96 @@ class ContentIndexer {
     async buildIndex() {
         console.log('\n🚀 Starting indexing of all sources...\n');
         const sources = await this.loadSources();
+        const forceReindex = process.argv.includes('--force');
+        const defaultTTL = sources.globalTTL || 7;
+        
+        if (forceReindex) {
+            console.log('⚡ FORCE MODE - Re-indexing all sources regardless of age\n');
+        } else {
+            console.log(`ℹ️  Using TTL: ${defaultTTL} days (can be overridden per source)\n`);
+        }
+        
         const allPages = [];
+        let skippedCount = 0, indexedCount = 0;
+        
         console.log('🌐 ONLINE SOURCES:');
         for (const source of sources.online) {
             try {
+                const ttlDays = source.ttl_days; // Already has default from loadSources()
+                const shouldSkip = this.shouldSkipSource(source.id, ttlDays, forceReindex);
+                
+                if (shouldSkip) {
+                    const age = this.getSourceAge(source.id);
+                    const existingPages = this.reuseSourcePages(source.id);
+                    console.log(`\n✅ ${source.name} - Skipping (indexed ${age}, TTL: ${ttlDays} days)`);
+                    console.log(`   Using ${existingPages.length} cached pages from index`);
+                    allPages.push(...existingPages);
+                    skippedCount++;
+                    continue;
+                }
+                
                 let pages = [];
                 if (source.type === 'gitbook') pages = await this.indexGitBookSource(source);
                 else if (source.type === 'docusaurus') pages = await this.indexDocusaurusSource(source);
                 else if (source.type === 'markdown') pages = await this.indexMarkdownSource(source);
                 allPages.push(...pages);
+                indexedCount++;
             } catch (error) {
                 console.error(`❌ Error indexing ${source.name}:`, error.message);
             }
         }
+        
         if (sources.offline.length > 0) {
             console.log('\n📁 OFFLINE SOURCES:');
             for (const source of sources.offline) {
                 try {
                     const pages = await this.indexLocalSource(source);
                     allPages.push(...pages);
+                    indexedCount++;
                 } catch (error) {
                     console.error(`❌ Error indexing ${source.name}:`, error.message);
                 }
             }
         }
+        
+        // Update index with last_indexed timestamp for each source
+        const updatedSources = sources.all.map(s => {
+            const ttlDays = s.ttl_days || defaultTTL;
+            const wasIndexed = !this.shouldSkipSource(s.id, ttlDays, forceReindex);
+            const existing = this.index.sources.find(old => old.id === s.id);
+            
+            return {
+                id: s.id,
+                name: s.name,
+                type: s.type,
+                description: s.description || '',
+                page_count: allPages.filter(p => p.source_id === s.id).length,
+                is_local: s.type === 'local',
+                last_indexed: wasIndexed || forceReindex ? new Date().toISOString() : (existing?.last_indexed || new Date().toISOString()),
+                ttl_days: ttlDays
+            };
+        });
+        
         this.index = {
             pages: allPages,
             last_updated: new Date().toISOString(),
             total_pages: allPages.length,
-            sources: sources.all.map(s => ({
-                id: s.id, name: s.name, type: s.type,
-                description: s.description || '',
-                page_count: allPages.filter(p => p.source_id === s.id).length,
-                is_local: s.type === 'local'
-            }))
+            sources: updatedSources
         };
-        this.index.pages.forEach(page => { if (page.is_local === undefined) page.is_local = false; });
+        
+        this.index.pages.forEach(page => { 
+            if (page.is_local === undefined) page.is_local = false; 
+        });
+        
         await this.saveIndex();
-        console.log(`\n✅ Indexing complete! Total: ${allPages.length} pages`);
+        
+        console.log(`\n✅ Indexing complete!`);
+        console.log(`   Total pages: ${allPages.length}`);
+        console.log(`   Sources indexed: ${indexedCount}`);
+        console.log(`   Sources skipped (TTL): ${skippedCount}`);
+        if (!forceReindex && skippedCount > 0) {
+            console.log(`\n💡 Tip: Use --force to re-index all sources regardless of TTL`);
+        }
     }
 
     async saveIndex() {
@@ -746,6 +811,39 @@ class ContentIndexer {
             sources: this.index.sources || []
         };
     }
+
+    // Check if a source should be skipped based on TTL
+    shouldSkipSource(sourceId, ttlDays, forceReindex) {
+        if (forceReindex) return false; // Never skip in force mode
+        
+        const sourceInIndex = this.index.sources.find(s => s.id === sourceId);
+        if (!sourceInIndex || !sourceInIndex.last_indexed) return false; // No previous index, must index
+        
+        const lastIndexed = new Date(sourceInIndex.last_indexed);
+        const now = new Date();
+        const daysSinceIndex = (now - lastIndexed) / (1000 * 60 * 60 * 24);
+        
+        return daysSinceIndex < ttlDays;
+    }
+
+    // Get age of source index in human-readable format
+    getSourceAge(sourceId) {
+        const sourceInIndex = this.index.sources.find(s => s.id === sourceId);
+        if (!sourceInIndex || !sourceInIndex.last_indexed) return 'never indexed';
+        
+        const lastIndexed = new Date(sourceInIndex.last_indexed);
+        const now = new Date();
+        const daysSinceIndex = Math.floor((now - lastIndexed) / (1000 * 60 * 60 * 24));
+        
+        if (daysSinceIndex === 0) return 'today';
+        if (daysSinceIndex === 1) return '1 day ago';
+        return `${daysSinceIndex} days ago`;
+    }
+
+    // Reuse existing pages from index for a source
+    reuseSourcePages(sourceId) {
+        return this.index.pages.filter(p => p.source_id === sourceId);
+    }
 }
 
 if (require.main === module) {
@@ -784,10 +882,27 @@ if (require.main === module) {
             console.log(`\nTotal: ${results.length} results`);
         } else if (command === 'info') {
             const info = indexer.getIndexInfo();
-            console.log(`📊 ${info.total_pages} pages | Updated: ${info.last_updated}`);
-            info.sources.forEach(s => console.log(`  - ${s.name}: ${s.page_count} pages`));
+            console.log(`\n📊 ENGRAM Index Status`);
+            console.log(`   Total pages: ${info.total_pages}`);
+            console.log(`   Last updated: ${info.last_updated || 'Never'}`);
+            console.log(`\n📚 Sources:`);
+            info.sources.forEach(s => {
+                const age = indexer.getSourceAge(s.id);
+                const ttl = s.ttl_days || 7;
+                console.log(`   - ${s.name}: ${s.page_count} pages (indexed ${age}, TTL: ${ttl}d)`);
+            });
+            console.log(`\n💡 Tips:`);
+            console.log(`   - Run "npm run index" for incremental update (respects TTL)`);
+            console.log(`   - Run "npm run index -- --force" to re-index everything`);
         } else {
-            console.log('Usage: node indexer.js [build|cache|cache-status|update <file>|remove <file>|search <term>|info]');
+            console.log('ENGRAM Indexer - Usage:');
+            console.log('');
+            console.log('  npm run index              Smart incremental indexing (respects TTL)');
+            console.log('  npm run index -- --force   Force re-index all sources');
+            console.log('  node indexer.js cache      Cache pages for offline use');
+            console.log('  node indexer.js info       Show index status and source ages');
+            console.log('  node indexer.js search <q> Search the index');
+            console.log('');
         }
     })();
 }

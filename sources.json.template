@@ -1,7 +1,12 @@
-# Example Sources.JSON
-Create a new file `sources.json` with this content inside and choose your sources.
-```
 {
+    "index_settings": {
+    "default_ttl_days": 14
+    "auto_refresh": false,
+    "refresh_interval_hours": 24,
+    "max_pages_per_source": 50,
+    "timeout_seconds": 15,
+    "retry_attempts": 2
+  },
   "offline_sources": [
     {
       "id": "local-notes",
@@ -15,6 +20,8 @@ Create a new file `sources.json` with this content inside and choose your source
       "enabled": false,
       "description": "Personal pentest notes in markdown format"
     }
+    ...
+    ...
   ],
   "online_sources": [
     {
@@ -31,12 +38,4 @@ Create a new file `sources.json` with this content inside and choose your source
     ...
     ...
   ],
-  "index_settings": {
-    "auto_refresh": false,
-    "refresh_interval_hours": 24,
-    "max_pages_per_source": 50,
-    "timeout_seconds": 15,
-    "retry_attempts": 2
-  }
 }
-```
