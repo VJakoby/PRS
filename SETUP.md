@@ -1,4 +1,4 @@
-# ENGRAM - Setup Guide (NPM)
+# ENGRAM - Setup Guide
 
 ## 🚀 Quick Start
 
@@ -38,9 +38,57 @@ engram/
 ├── sources.json            # Your config (NOT tracked - private)
 ├── synonyms.json           # Search synonym expansions
 ├── data/
-│   └── index.json         # Generated search index
+│   ├── index.json         # Generated search index
+│   ├── index.meta.json    # Index metadata
+│   └── cache/             # Offline cached pages
 └── public/
     └── app.html           # Web interface
+```
+
+---
+
+## 🛠️ Indexing Commands
+
+### Smart Incremental (Default)
+```bash
+npm run index
+```
+- Respects TTL - only re-indexes old sources
+- Fast daily updates (~5-30 seconds)
+- Checks local files for modifications
+
+### Force Full Re-index
+```bash
+npm run index -- --force
+```
+- Re-indexes ALL sources regardless of TTL
+- Use after major config changes
+- Takes ~10-15 minutes
+
+### Index Only Online Sources
+```bash
+npm run index -- --online
+```
+- Indexes only online sources (GitBook, Docusaurus, etc.)
+- Preserves local files in index
+- Useful for updating documentation sites
+
+### Index Only Local Files
+```bash
+npm run index -- --local
+```
+- Indexes only local markdown files
+- Preserves online sources in index
+- Super fast (~5 seconds)
+- Perfect for daily note updates
+
+### Combine Flags
+```bash
+# Force re-index only online sources
+npm run index -- --force --online
+
+# Force re-index only local files
+npm run index -- --force --local
 ```
 
 ---
@@ -52,7 +100,10 @@ engram/
 ```json
 {
   "index_settings": {
-    "default_ttl_days": 7
+    "default_ttl_days": 7,
+    "max_pages_per_source": null,
+    "timeout_seconds": 15,
+    "retry_attempts": 2
   },
   "online_sources": [
     {
@@ -77,6 +128,11 @@ engram/
 }
 ```
 
+**Key Settings:**
+- `default_ttl_days` - Days before re-indexing (default: 7)
+- `max_pages_per_source` - Limit pages per source (null = unlimited)
+- `timeout_seconds` - HTTP timeout (default: 15)
+- `retry_attempts` - Retry failed requests (default: 2)
 ---
 
 ## 🔧 Common Tasks
@@ -94,7 +150,7 @@ engram/
 
 Then run:
 ```bash
-npm run index -- --force
+npm run index -- --force --online
 ```
 
 ### Add Local Files
@@ -107,39 +163,26 @@ npm run index -- --force
 }
 ```
 
-### Update Index (Smart Mode)
+Then run:
 ```bash
+npm run index -- --local
+```
+
+### Daily Update Workflow
+```bash
+# Quick incremental update (respects TTL)
 npm run index
-```
-Only re-indexes sources older than their TTL.
 
-### Force Full Re-index
+# Or if you only changed local files
+npm run index -- --local
+```
+
+### Update Single File
 ```bash
-npm run index -- --force
-```
-Re-indexes everything regardless of TTL.
-
----
-
-## 🐛 Troubleshooting
-
-### "sources.json not found"
-```bash
-cp sources.json.template sources.json
+node indexer.js update /path/to/file.md
 ```
 
-### Git keeps tracking sources.json
-```bash
-git rm --cached sources.json
-git commit -m "Stop tracking sources.json"
-```
-
-### Index seems outdated
-```bash
-npm run index -- --force
-```
-
-### Check index status
+### Check Index Status
 ```bash
 node indexer.js info
 ```
@@ -162,43 +205,59 @@ Edit `synonyms.json` to add search term expansions:
 npm run cache
 ```
 
-### Update Single File (Local Sources)
+Check cache status:
 ```bash
-node indexer.js update /path/to/file.md
+npm run cache-status
+```
+
+### Remove File from Index
+```bash
+node indexer.js remove /path/to/file.md
+```
+
+### CLI Search
+```bash
+node indexer.js search "sql injection"
 ```
 
 ---
 
-## 🔐 Security Note
+## 📊 Performance Tips
 
-**Never commit `sources.json` to public repositories!**
-
-It may contain:
-- Private file paths
-- Internal documentation URLs
-- Your personal note locations
-
-The `.gitignore` file prevents this, but always double-check:
+### Daily Workflow (Fastest)
 ```bash
-git status  # sources.json should NOT appear
+npm run index -- --local  # ~5 seconds
 ```
+Only updates your local notes.
+
+### Weekly Update
+```bash
+npm run index  # ~30 seconds
+```
+Smart incremental - only updates sources outside TTL.
+
+### Monthly Full Refresh
+```bash
+npm run index -- --force  # ~15 minutes
+```
+Complete re-index of everything.
+
 
 ---
 
 ## 📖 Documentation
-
-- [TTL Simple Guide](./TTL-SIMPLE-GUIDE.md) - TTL configuration
-- [TTL Full Guide](./TTL-GUIDE.md) - Advanced TTL features
+- **[README.md](./README.md)** - Full documentation
 - `sources.json.template` - Configuration template
 
 ---
 
 ## 🆘 Getting Help
 
-1. Check `node indexer.js info` for index status
+1. Check index status: `node indexer.js info`
 2. Check server logs in terminal
-3. Verify sources.json syntax (valid JSON)
+3. Verify `sources.json` syntax (valid JSON)
 4. Try `npm run index -- --force` to rebuild
+5. Check documentation links above
 
 ---
 
@@ -215,3 +274,19 @@ git status  # sources.json should NOT appear
 - [ ] Configure TTL if needed
 
 Done! 🎉
+
+---
+
+## 🎯 Quick Reference
+
+| Command | Description | Time |
+|---------|-------------|------|
+| `npm run index` | Smart incremental update | ~5-30s |
+| `npm run index -- --force` | Force re-index everything | ~15min |
+| `npm run index -- --online` | Index only online sources | ~10min |
+| `npm run index -- --local` | Index only local files | ~5s |
+| `npm run index -- --force --online` | Force online re-index | ~10min |
+| `npm run index -- --force --local` | Force local re-index | ~5s |
+| `node indexer.js info` | Show index status | instant |
+| `node indexer.js update <file>` | Update single file | instant |
+| `npm start` | Start API server | instant |
