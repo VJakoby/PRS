@@ -72,7 +72,9 @@ When running alongside PRAGMA in Docker, they communicate over a shared internal
 | Command | Description |
 |---|---|
 | `npm run index` | Smart incremental indexing (respects TTL) |
-| `npm run index -- --force` | Force re-index all sources regardless of TTL |
+| `npm run index -- --force` | Force re-index "all" sources regardless of TTL |
+| `npm run index -- --local` | Force re-index "local" sources regardless of TTL |
+| `npm run index -- --online` | Force re-index "online" sources regardless of TTL |
 | `node indexer.js info` | View index statistics and source ages |
 | `npm run cache` | Cache online sources locally for offline use |
 | `npm run cache-status` | Show storage usage and cached page statistics |
@@ -247,20 +249,6 @@ engram/
 
 ---
 
-## 🔐 Security
-
-### Private Configuration
-
-`sources.json` is in `.gitignore` to protect:
-- Private file paths
-- Internal documentation URLs
-- Personal note locations
-
-Always verify before committing:
-```bash
-git status  # sources.json should NOT appear
-```
-
 ### Setup for New Users
 
 ```bash
@@ -325,7 +313,7 @@ node indexer.js info
 
 ## 🤝 Integration with PRAGMA
 
-ENGRAM is designed to work seamlessly with [PRAGMA](https://github.com/VJakoby/pragma) (AI-powered pentesting assistant).
+ENGRAM is designed to work seamlessly with [PRAGMA](https://github.com/VJakoby/pragma).
 
 **Standalone:**
 ```
