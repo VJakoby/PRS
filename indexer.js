@@ -1,20 +1,4 @@
-/**npm 
- * ENGRAM
- * Copyright (C) 2026 VJakoby
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * ENGRAM is architected by VJakoby + 🤖. This program is distributed in 
- * the hope that it will be useful, but WITHOUT ANY WARRANTY; without even 
- * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
- *//**
+/**
  * ENGRAM
  * Copyright (C) 2026 VJakoby
  * GPL-3.0 — see <https://www.gnu.org/licenses/>.
@@ -24,7 +8,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const cheerio = require('cheerio');
 const crypto = require('crypto');
-const RATE = 1000;
+const RATE = 200; // Good balance
 
 class ContentIndexer {
     constructor() {
@@ -65,12 +49,22 @@ class ContentIndexer {
         const sourcesData = await fs.readFile(this.sourcesPath, 'utf-8');
         const config = JSON.parse(sourcesData);
         
-        // Get global settings
-        const globalTTL = config.index_settings?.default_ttl_days || 7;
+        // Get global settings with defaults
+        const settings = config.index_settings || {};
+        const globalTTL = settings.default_ttl_days || 7;
+        const maxPages = settings.max_pages_per_source || null; // null = unlimited
+        const timeout = (settings.timeout_seconds || 15) * 1000; // Convert to ms
+        const retryAttempts = settings.retry_attempts || 2;
         
         const onlineSources = (config.online_sources || config.sources || [])
             .filter(s => s.enabled)
-            .map(s => ({ ...s, ttl_days: s.ttl_days ?? globalTTL })); // Use source-specific TTL or global default
+            .map(s => ({ 
+                ...s, 
+                ttl_days: s.ttl_days ?? globalTTL,
+                max_pages: s.max_pages ?? maxPages,
+                timeout: timeout,
+                retry_attempts: retryAttempts
+            }));
             
         const offlineSources = (config.offline_sources || []).filter(s => s.enabled);
         
@@ -78,7 +72,15 @@ class ContentIndexer {
             online: onlineSources, 
             offline: offlineSources, 
             all: [...onlineSources, ...offlineSources],
-            globalTTL: globalTTL
+            globalTTL: globalTTL,
+            settings: {
+                default_ttl_days: globalTTL,
+                auto_refresh: settings.auto_refresh || false,
+                refresh_interval_hours: settings.refresh_interval_hours || 24,
+                max_pages_per_source: maxPages,
+                timeout_seconds: settings.timeout_seconds || 15,
+                retry_attempts: retryAttempts
+            }
         };
     }
 
@@ -242,24 +244,37 @@ class ContentIndexer {
         return false;
     }
 
-    async fetchPage(url, timeout = 15000) {
-        try {
-            const response = await axios.get(url, {
-                timeout,
-                headers: {
-                    'User-Agent': 'ENGRAM',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                    'Accept-Language': 'en-US,en;q=0.5',
-                },
-                maxRedirects: 5
-            });
-            return response.data;
-        } catch (error) {
-            if (error.code === 'ECONNABORTED') console.error(`  ⏱️  Timeout: ${url}`);
-            else if (error.response) console.error(`  ❌ HTTP ${error.response.status}: ${url}`);
-            else console.error(`  ❌ ${error.message}: ${url}`);
-            return null;
+    async fetchPage(url, timeout = 15000, retries = 2) {
+        let lastError = null;
+        
+        for (let attempt = 0; attempt <= retries; attempt++) {
+            try {
+                const response = await axios.get(url, {
+                    timeout,
+                    headers: {
+                        'User-Agent': 'ENGRAM',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                        'Accept-Language': 'en-US,en;q=0.5',
+                    },
+                    maxRedirects: 5
+                });
+                return response.data;
+            } catch (error) {
+                lastError = error;
+                if (attempt < retries) {
+                    // Wait a bit before retrying
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+                    continue;
+                }
+                
+                // Log only on final failure
+                if (error.code === 'ECONNABORTED') console.error(`  ⏱️  Timeout: ${url}`);
+                else if (error.response) console.error(`  ❌ HTTP ${error.response.status}: ${url}`);
+                else console.error(`  ❌ ${error.message}: ${url}`);
+                return null;
+            }
         }
+        return null;
     }
 
     extractTextContent(html) {
@@ -372,7 +387,7 @@ class ContentIndexer {
         if (sitemapUrls) {
             linkArray = sitemapUrls;
         } else {
-            const html = await this.fetchPage(source.index_url);
+            const html = await this.fetchPage(source.index_url, source.timeout, source.retry_attempts);
             if (!html) return pages;
             const $ = cheerio.load(html);
             const links = new Set();
@@ -387,6 +402,13 @@ class ContentIndexer {
             });
             linkArray = Array.from(links).slice(0, 50);
         }
+        
+        // Apply max_pages limit if set
+        if (source.max_pages && linkArray.length > source.max_pages) {
+            console.log(`  ℹ️  Limiting to ${source.max_pages} pages (total found: ${linkArray.length})`);
+            linkArray = linkArray.slice(0, source.max_pages);
+        }
+        
         let successful = 0, skipped = 0;
         for (let i = 0; i < linkArray.length; i++) {
             const link = linkArray[i];
@@ -423,11 +445,18 @@ class ContentIndexer {
         console.log(`\n📘 Indexing ${source.name}...`);
         const pages = [];
         if (!source.pages || source.pages.length === 0) return pages;
-        for (let i = 0; i < source.pages.length; i++) {
-            const page = source.pages[i];
+        
+        let pageList = source.pages;
+        if (source.max_pages && pageList.length > source.max_pages) {
+            console.log(`  ℹ️  Limiting to ${source.max_pages} pages (total found: ${pageList.length})`);
+            pageList = pageList.slice(0, source.max_pages);
+        }
+        
+        for (let i = 0; i < pageList.length; i++) {
+            const page = pageList[i];
             const url = `${source.base_url}/${page}`;
-            console.log(`  [${i + 1}/${source.pages.length}] Fetching: ${url}`);
-            const html = await this.fetchPage(url);
+            console.log(`  [${i + 1}/${pageList.length}] Fetching: ${url}`);
+            const html = await this.fetchPage(url, source.timeout, source.retry_attempts);
             if (html) {
                 const title = this.extractTitle(html, url);
                 pages.push({
@@ -451,10 +480,17 @@ class ContentIndexer {
         console.log(`\n📄 Indexing ${source.name}...`);
         const pages = [];
         if (!source.urls || source.urls.length === 0) return pages;
-        for (let i = 0; i < source.urls.length; i++) {
-            const url = source.urls[i];
-            console.log(`  [${i + 1}/${source.urls.length}] Fetching: ${url}`);
-            const markdownContent = await this.fetchPage(url);
+        
+        let urlList = source.urls;
+        if (source.max_pages && urlList.length > source.max_pages) {
+            console.log(`  ℹ️  Limiting to ${source.max_pages} pages (total found: ${urlList.length})`);
+            urlList = urlList.slice(0, source.max_pages);
+        }
+        
+        for (let i = 0; i < urlList.length; i++) {
+            const url = urlList[i];
+            console.log(`  [${i + 1}/${urlList.length}] Fetching: ${url}`);
+            const markdownContent = await this.fetchPage(url, source.timeout, source.retry_attempts);
             if (markdownContent) {
                 const lines = markdownContent.split('\n');
                 let title = null;
@@ -492,6 +528,8 @@ class ContentIndexer {
         const sources = await this.loadSources();
         const forceReindex = process.argv.includes('--force');
         const defaultTTL = sources.globalTTL || 7;
+        
+        console.log(`⏱️  Rate limit: ${this.getRateFormatted()}`);
         
         if (forceReindex) {
             console.log('⚡ FORCE MODE - Re-indexing all sources regardless of age\n');
@@ -810,6 +848,23 @@ class ContentIndexer {
             last_updated: this.index.last_updated,
             sources: this.index.sources || []
         };
+    }
+
+    getRate() {
+        return RATE;
+    }
+
+    getRateFormatted() {
+        const requestsPerSecond = 1000 / RATE;
+        
+        // Format based on value
+        if (requestsPerSecond >= 1) {
+            return `${RATE}ms (${requestsPerSecond.toFixed(1)} req/s)`;
+        } else {
+            // Less than 1 req/s, show as requests per minute
+            const requestsPerMinute = (60 * 1000) / RATE;
+            return `${RATE}ms (~${requestsPerMinute.toFixed(0)} req/min)`;
+        }
     }
 
     // Check if a source should be skipped based on TTL
