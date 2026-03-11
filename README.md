@@ -11,11 +11,74 @@ Technical documentation is fragmented between remote public docs and local notes
 ## ✨ Features
 
 - **Fast Indexing & Search** — Built with performance in mind for quick documentation retrieval
+- **Smart Incremental Updates** — TTL-based indexing only re-fetches sources when needed (30x faster daily runs)
 - **Smart Relevance Ranking** — Scoring based on match quality (exact > partial > fuzzy) and position (title > URL > content)
+- **Synonym Expansion** — Search for "ssh" and automatically include "secure shell", "22/tcp", "openssh"
 - **Offline Caching** — Download and store online sources locally for zero-latency searching and offline preview
-- **Rate-Limit Protection** — Smart jitter and sequential requests to avoid being blocked by documentation hosts
+- **Rate-Limit Protection** — Smart jitter, retry logic, and configurable timeouts to avoid being blocked
 - **Snippet Previews** — Shows where your search term appears in the content with surrounding context
 - **REST API** — Consumed by PRAGMA or any other tool on `http://localhost:3002`
+
+---
+
+## 🚀 Quick Start
+
+### 1. Install Dependencies
+```bash
+npm install
+```
+
+### 2. Configure Sources
+```bash
+# Copy the template
+cp sources.json.template sources.json
+
+# Edit with your sources
+nano sources.json
+```
+
+### 3. Build Index
+```bash
+# First time: force full index
+npm run index -- --force
+
+# After that: smart incremental updates
+npm run index
+```
+
+### 4. Start Server
+```bash
+npm start
+```
+
+Service runs on `http://localhost:3002`.
+
+---
+
+## 🐳 Docker (Alternative)
+
+```bash
+docker-compose up --build
+```
+
+ENGRAM will be available at `http://localhost:3002`.
+
+When running alongside PRAGMA in Docker, they communicate over a shared internal network (`http://engram:3002`). See PRAGMA's [DOCKER.md](https://github.com/VJakoby/pragma/blob/main/DOCKER.md) for the combined setup.
+
+---
+
+## 🛠️ CLI Commands
+
+| Command | Description |
+|---|---|
+| `npm run index` | Smart incremental indexing (respects TTL) |
+| `npm run index -- --force` | Force re-index all sources regardless of TTL |
+| `node indexer.js info` | View index statistics and source ages |
+| `npm run cache` | Cache online sources locally for offline use |
+| `npm run cache-status` | Show storage usage and cached page statistics |
+| `node indexer.js search <query>` | Fast CLI-based search |
+| `node indexer.js update <file>` | Update a specific local file in the index |
+| `node indexer.js remove <file>` | Remove a file from the index |
 
 ---
 
@@ -29,223 +92,253 @@ Results are ranked by **relevance**, not keyword count.
 | 50 pts | Title contains term |
 | 30 pts | Page name (URL) match |
 | 20 pts | URL fragment match |
-| 10 pts | Content match |
-| penalty | Fuzzy match — always used as fallback for typos |
+| 2 pts/occurrence | Content matches |
+| +5 pts | Bonus for concise titles |
+| Fuzzy | Always used as fallback for typos |
+
+**Synonym expansion:** Searching for "smb" automatically includes "samba", "445/tcp", "cifs" — configure in `synonyms.json`.
 
 ---
 
-## 🚀 Getting Started
+## ⚙️ Configuration
 
-### Docker (recommended)
+### Advanced Settings
 
-```bash
-docker-compose up --build
-```
-
-ENGRAM will be available at `http://localhost:3002`.
-
-When running alongside PRAGMA in Docker, they communicate over a shared internal network (`http://engram:3002`). See PRAGMA's [DOCKER.md](https://github.com/VJakoby/pragma/blob/main/DOCKER.md) for the combined setup.
-
-### Node.js
-
-#### 1. Install dependencies
-```bash
-npm install
-```
-
-#### 2. Configure sources
-Edit `sources.json` and add your documentation sources. See the [Sources Reference](#-sources-reference) below.
-
-#### 3. Build the index
-```bash
-# Index all enabled sources
-npm run index
-
-# Optionally cache online sources for offline use
-npm run cache
-```
-
-#### 4. Start the service
-```bash
-npm start
-```
-
-Service runs on `http://localhost:3002`.
-
----
-
-## 🛠️ CLI Commands
-
-| Command | Description |
-|---|---|
-| `npm run index` | Build/refresh the entire search index |
-| `npm run cache` | Cache online sources locally for offline use |
-| `npm run cache-status` | Show storage usage and cached page statistics |
-| `npm run update <path>` | Force-update a specific local file in the index |
-| `npm run info` | View index statistics (total pages, sources, last update) |
-| `npm run search -- "query"` | Fast CLI-based search |
-
----
-
-## ⚙️ Performance Tuning
-
-Adjust the `RATE` variable at the top of `indexer.js` to control indexing speed:
-
-| Value | Speed | Notes |
-|---|---|---|
-| `1000ms` | 1 req/sec | Very conservative, safest for sensitive hosts |
-| `200ms` | 5 req/sec | Default — good balance |
-| `100ms` | 10 req/sec | Fast, higher risk of rate-limiting |
-
----
-
-## ➕ Sources Reference
-
-All sources are defined in `sources.json`, which has three top-level keys:
-
-```
-sources.json
-├── offline_sources   — local markdown directories
-├── online_sources    — remote documentation sites
-└── index_settings    — global indexing behaviour
-```
-
-### Supported source types
-
-| Type | Use case | URL fields |
-|---|---|---|
-| `markdown` | Raw `.md` files — local dirs or direct URLs (e.g. GitHub raw links) | `urls` (array) |
-| `gitbook` | GitBook sites and GitBook-style documentation | `index_url` + `search_url` |
-| `docusaurus` | Docusaurus sites | `index_url` + `search_url` |
-
----
-
-### `offline_sources`
-
-Local markdown directories indexed directly from disk.
-
-```json
-{
-  "offline_sources": [
-    {
-      "id": "local-pentest-notes",
-      "name": "Local Pentest Notes",
-      "type": "markdown",
-      "path": "./path/to/your/notes",
-      "file_extensions": [".md", ".markdown"],
-      "enabled": true,
-      "description": "Personal pentest notes in markdown format"
-    }
-  ]
-}
-```
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `id` | string | ✅ | Unique identifier for this source |
-| `name` | string | ✅ | Display name shown in search results |
-| `type` | string | ✅ | Always `markdown` for local sources |
-| `path` | string | ✅ | Path to local directory containing markdown files |
-| `file_extensions` | array | ✅ | Extensions to index, e.g. `[".md", ".markdown"]` |
-| `enabled` | bool | ✅ | Set `false` to exclude from indexing without removing the entry |
-| `description` | string | ❌ | Optional human-readable description |
-
----
-
-### `online_sources`
-
-Remote documentation sites. The `type` field determines which fields are used.
-
-#### `markdown` type — direct URLs
-
-```json
-{
-  "id": "github-notes-example",
-  "name": "SQL Injection Payloads - GitHub",
-  "type": "markdown",
-  "enabled": true,
-  "cache_offline": false,
-  "description": "Raw markdown files from GitHub",
-  "urls": [
-    "https://github.com/user/repo/blob/main/README.md"
-  ]
-}
-```
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `id` | string | ✅ | Unique identifier |
-| `name` | string | ✅ | Display name shown in search results |
-| `type` | string | ✅ | `markdown` |
-| `enabled` | bool | ✅ | Whether to include in indexing |
-| `cache_offline` | bool | ✅ | If `true`, content is downloaded locally for offline search |
-| `urls` | array | ✅ | List of raw markdown URLs to fetch and index |
-| `description` | string | ❌ | Optional description |
-
-#### `gitbook` / `docusaurus` type — crawled sites
-
-```json
-{
-  "id": "hacktricks",
-  "name": "HackTricks",
-  "type": "gitbook",
-  "index_url": "https://book.hacktricks.xyz/",
-  "search_url": "https://book.hacktricks.xyz/?q={query}",
-  "enabled": true,
-  "description": "Hacking tricks and techniques"
-}
-```
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `id` | string | ✅ | Unique identifier |
-| `name` | string | ✅ | Display name shown in search results |
-| `type` | string | ✅ | `gitbook` or `docusaurus` |
-| `index_url` | string | ✅ | Root URL used as the crawl entry point |
-| `search_url` | string | ✅ | Search URL template — `{query}` is replaced with the search term at query time |
-| `enabled` | bool | ✅ | Whether to include in indexing |
-| `description` | string | ❌ | Optional description |
-
----
-
-### `index_settings`
-
-Global settings that apply to all sources during indexing.
+The global settings look like this:
 
 ```json
 {
   "index_settings": {
-    "auto_refresh": false,
-    "refresh_interval_hours": 24,
-    "max_pages_per_source": 50,
+    "default_ttl_days": 7,
+    "max_pages_per_source": null,
     "timeout_seconds": 15,
     "retry_attempts": 2
   }
 }
 ```
 
-| Field | Type | Description |
-|---|---|---|
-| `auto_refresh` | bool | Automatically re-index sources on a schedule |
-| `refresh_interval_hours` | number | How often to refresh when `auto_refresh` is `true` |
-| `max_pages_per_source` | number | Maximum pages crawled per source |
-| `timeout_seconds` | number | Request timeout per page |
-| `retry_attempts` | number | How many times to retry a failed request |
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `default_ttl_days` | 7 | Days before re-indexing a source |
+| `max_pages_per_source` | null | Limit pages per source (null = unlimited) |
+| `timeout_seconds` | 15 | HTTP request timeout |
+| `retry_attempts` | 2 | Retry attempts for failed requests |
+
+All global settings support per-source overrides: 
+
+**Per-source override example:**
+```json
+{
+  "id": "slow_site",
+  "ttl_days": 30,
+  "timeout_seconds": 45,
+  "retry_attempts": 5
+}
+```
+---
+
+## 📚 Source Types
+
+ENGRAM supports the following source types:
+- Local Files (`type: "local"`)
+- GitBook (`type: "gitbook"`)
+- Docusaurus (`type: "docusaurus"`)
+- Markdown URLs (`type: "markdown"`)
 
 ---
 
-## 🔌 API
+## 🚀 Performance
 
-ENGRAM exposes a simple REST API on `http://localhost:3002`.
+### Incremental Indexing (TTL-based)
 
-| Method | Endpoint | Description |
+**Before TTL:**
+- ⏱️ Time: ~15 minutes
+- 📡 Requests: ~500 HTTP calls
+- 💾 Bandwidth: ~50 MB
+
+**After TTL (daily runs):**
+- ⏱️ Time: ~30 seconds (30x faster!)
+- 📡 Requests: ~50 HTTP calls (only old sources)
+- 💾 Bandwidth: ~5 MB
+
+**Example output:**
+```
+ℹ️  Using TTL: 7 days
+
+✅ HackTricks - Skipping (indexed 2 days ago, TTL: 7 days)
+   Using 143 cached pages from index
+
+✅ HTB Academy - Skipping (indexed 5 days ago, TTL: 7 days)
+   Using 89 cached pages from index
+
+📚 Indexing OWASP Testing Guide...
+  [1/15] Fetching: https://...
+```
+
+### Tuning
+
+Adjust `RATE` constant in `indexer.js`:
+
+| Value | Speed | Notes |
 |---|---|---|
-| `GET` | `/api/search?q=<query>` | Search the index — returns ranked results |
-| `GET` | `/api/sources` | List all enabled sources and their status |
-| `GET` | `/api/cache-status` | Storage usage and cached page statistics |
-
-> These endpoints are consumed by PRAGMA but can be used by any HTTP client for debugging or integration.
+| `1000ms` | 1 req/sec | Conservative, safest |
+| `500ms` | 2 req/sec | Default — good balance |
+| `200ms` | 5 req/sec | Fast, higher risk |
 
 ---
 
-Created by VJakoby + 🤖 | Licensed under MIT | [View AI & Architectural Disclosure](./AI-DISCLOSURE.md)
+## 🔍 Search Features
+
+### Synonym Expansion
+
+Configure in `synonyms.json`:
+
+```json
+{
+  "ssh": ["secure shell", "22/tcp", "openssh"],
+  "smb": ["samba", "445/tcp", "cifs"],
+  "sqli": ["sql injection", "union select"]
+}
+```
+
+Searching for "ssh" automatically includes all synonyms in results.
+
+---
+
+### Fuzzy Matching
+
+Built-in fuzzy matching catches typos:
+- "sqlinjection" → matches "sql injection"
+- "privelege" → matches "privilege"
+- "hydra" → matches "hydra", "thc-hydra"
+
+---
+
+## 📁 File Structure
+
+```
+engram/
+├── indexer.js                  # Core indexing logic
+├── server.js                   # API server
+├── sources.json.template       # Configuration template (tracked)
+├── sources.json                # Your config (NOT tracked - private)
+├── synonyms.json               # Search synonyms
+├── data/
+│   ├── index.json             # Generated search index
+│   ├── index.meta.json        # Index metadata
+│   └── cache/                 # Offline cached pages
+│       └── online/
+│           └── <source_id>/
+│               ├── metadata.json
+│               └── <hash>.html
+├── public/
+│   └── app.html               # Web interface
+├── SETUP.md                   # Setup guide
+├── CONFIGURATION-GUIDE.md     # Full config reference
+└── TTL-SIMPLE-GUIDE.md       # TTL quick guide
+```
+
+---
+
+## 📖 Documentation
+
+- **[SETUP.md](./SETUP.md)** — Getting started guide
+- **[DOCKER.md](./DOCKER.md)** — Docker setuo guide
+
+---
+
+## 🔐 Security
+
+### Private Configuration
+
+`sources.json` is in `.gitignore` to protect:
+- Private file paths
+- Internal documentation URLs
+- Personal note locations
+
+Always verify before committing:
+```bash
+git status  # sources.json should NOT appear
+```
+
+### Setup for New Users
+
+```bash
+# Clone repo
+git clone your-repo.git
+cd engram
+
+# Copy template
+cp sources.json.template sources.json
+
+# Configure
+nano sources.json
+
+# Build index
+npm run index -- --force
+
+# Start
+npm start
+```
+
+---
+
+## 🛠️ Troubleshooting
+
+### "sources.json not found"
+```bash
+cp sources.json.template sources.json
+```
+
+### Index seems outdated
+```bash
+npm run index -- --force
+```
+
+### Too many timeouts
+Increase timeout in `sources.json`:
+```json
+{
+  "index_settings": {
+    "timeout_seconds": 30,
+    "retry_attempts": 3
+  }
+}
+```
+
+### Index too large
+Limit pages per source:
+```json
+{
+  "index_settings": {
+    "max_pages_per_source": 100
+  }
+}
+```
+
+### Check index status
+```bash
+node indexer.js info
+```
+
+---
+
+## 🤝 Integration with PRAGMA
+
+ENGRAM is designed to work seamlessly with [PRAGMA](https://github.com/VJakoby/pragma) (AI-powered pentesting assistant).
+
+**Standalone:**
+```
+ENGRAM (localhost:3002) → Search API
+```
+
+**With PRAGMA:**
+```
+PRAGMA → ENGRAM (localhost:3002) → Search API
+```
+
+---
+
+## 📝 License
+
+Created by VJakoby + 🤖 | Licensed under GPL-3.0 | [View AI & Architectural Disclosure](./AI-DISCLOSURE.md)

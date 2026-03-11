@@ -35,14 +35,20 @@ async function startServer() {
     try {
         await indexer.initialize();
         const info = indexer.getIndexInfo();
+        const sources = await indexer.loadSources();
+        const defaultTTL = sources.globalTTL || 7;
         
         if (info.total_pages > 0) {
             indexReady = true;
             console.log(`✅ Index loaded with ${info.total_pages} pages`);
             console.log(`📅 Last updated: ${info.last_updated || 'Never'}`);
+            console.log(`⏰ Default TTL: ${defaultTTL} days`);
+            console.log(`⏱️  Rate limit: ${indexer.getRate()}ms between requests`);
             console.log(`📚 Sources:`);
             info.sources.forEach(s => {
-                console.log(`   - ${s.name}: ${s.page_count} pages`);
+                const age = indexer.getSourceAge(s.id);
+                const ttl = s.ttl_days || defaultTTL;
+                console.log(`   - ${s.name}: ${s.page_count} pages (indexed ${age}, TTL: ${ttl}d)`);
             });
             console.log();
         } else {
