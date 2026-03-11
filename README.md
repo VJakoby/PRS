@@ -37,8 +37,6 @@ cp sources.json.template sources.json
 nano sources.json
 ```
 
-See [Configuration Guide](./CONFIGURATION-GUIDE.md) for detailed settings.
-
 ### 3. Build Index
 ```bash
 # First time: force full index
