@@ -20,7 +20,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const cheerio = require('cheerio');
 const crypto = require('crypto');
-const RATE = 200; // Good balance
+const RATE = 200;
 
 class ContentIndexer {
     constructor() {
@@ -539,47 +539,77 @@ class ContentIndexer {
         console.log('\n🚀 Starting indexing of all sources...\n');
         const sources = await this.loadSources();
         const forceReindex = process.argv.includes('--force');
+        const onlineOnly = process.argv.includes('--online');
+        const localOnly = process.argv.includes('--local');
         const defaultTTL = sources.globalTTL || 7;
+        
+        // Validate flags
+        if (onlineOnly && localOnly) {
+            console.error('❌ Error: Cannot use both --online and --local flags together');
+            process.exit(1);
+        }
         
         console.log(`⏱️  Rate limit: ${this.getRateFormatted()}`);
         
         if (forceReindex) {
-            console.log('⚡ FORCE MODE - Re-indexing all sources regardless of age\n');
+            console.log('⚡ FORCE MODE - Re-indexing all sources regardless of age');
         } else {
-            console.log(`ℹ️  Using TTL: ${defaultTTL} days (can be overridden per source)\n`);
+            console.log(`ℹ️  Using TTL: ${defaultTTL} days (can be overridden per source)`);
         }
+        
+        if (onlineOnly) {
+            console.log('🌐 MODE: Online sources only');
+        } else if (localOnly) {
+            console.log('📁 MODE: Local sources only');
+        }
+        
+        console.log();
         
         const allPages = [];
         let skippedCount = 0, indexedCount = 0;
         
-        console.log('🌐 ONLINE SOURCES:');
-        for (const source of sources.online) {
-            try {
-                const ttlDays = source.ttl_days; // Already has default from loadSources()
-                const shouldSkip = this.shouldSkipSource(source.id, ttlDays, forceReindex);
-                
-                if (shouldSkip) {
-                    const age = this.getSourceAge(source.id);
-                    const existingPages = this.reuseSourcePages(source.id);
-                    console.log(`\n✅ ${source.name} - Skipping (indexed ${age}, TTL: ${ttlDays} days)`);
-                    console.log(`   Using ${existingPages.length} cached pages from index`);
-                    allPages.push(...existingPages);
-                    skippedCount++;
-                    continue;
+        // Index online sources (unless --local is specified)
+        if (!localOnly && sources.online.length > 0) {
+            console.log('🌐 ONLINE SOURCES:');
+            for (const source of sources.online) {
+                try {
+                    const ttlDays = source.ttl_days;
+                    const shouldSkip = this.shouldSkipSource(source.id, ttlDays, forceReindex);
+                    
+                    if (shouldSkip) {
+                        const age = this.getSourceAge(source.id);
+                        const existingPages = this.reuseSourcePages(source.id);
+                        console.log(`\n✅ ${source.name} - Skipping (indexed ${age}, TTL: ${ttlDays} days)`);
+                        console.log(`   Using ${existingPages.length} cached pages from index`);
+                        allPages.push(...existingPages);
+                        skippedCount++;
+                        continue;
+                    }
+                    
+                    let pages = [];
+                    if (source.type === 'gitbook') pages = await this.indexGitBookSource(source);
+                    else if (source.type === 'docusaurus') pages = await this.indexDocusaurusSource(source);
+                    else if (source.type === 'markdown') pages = await this.indexMarkdownSource(source);
+                    allPages.push(...pages);
+                    indexedCount++;
+                } catch (error) {
+                    console.error(`❌ Error indexing ${source.name}:`, error.message);
                 }
-                
-                let pages = [];
-                if (source.type === 'gitbook') pages = await this.indexGitBookSource(source);
-                else if (source.type === 'docusaurus') pages = await this.indexDocusaurusSource(source);
-                else if (source.type === 'markdown') pages = await this.indexMarkdownSource(source);
-                allPages.push(...pages);
-                indexedCount++;
-            } catch (error) {
-                console.error(`❌ Error indexing ${source.name}:`, error.message);
             }
+        } else if (localOnly && sources.online.length > 0) {
+            // When --local is specified, keep existing online pages in index
+            console.log('🌐 ONLINE SOURCES: Skipped (--local flag active)');
+            console.log('   Preserving existing online pages in index\n');
+            sources.online.forEach(source => {
+                const existingPages = this.reuseSourcePages(source.id);
+                if (existingPages.length > 0) {
+                    allPages.push(...existingPages);
+                }
+            });
         }
         
-        if (sources.offline.length > 0) {
+        // Index offline sources (unless --online is specified)
+        if (!onlineOnly && sources.offline.length > 0) {
             console.log('\n📁 OFFLINE SOURCES:');
             for (const source of sources.offline) {
                 try {
@@ -590,12 +620,38 @@ class ContentIndexer {
                     console.error(`❌ Error indexing ${source.name}:`, error.message);
                 }
             }
+        } else if (onlineOnly && sources.offline.length > 0) {
+            // When --online is specified, keep existing offline pages in index
+            console.log('\n📁 OFFLINE SOURCES: Skipped (--online flag active)');
+            console.log('   Preserving existing offline pages in index\n');
+            sources.offline.forEach(source => {
+                const existingPages = this.reuseSourcePages(source.id);
+                if (existingPages.length > 0) {
+                    allPages.push(...existingPages);
+                }
+            });
         }
         
         // Update index with last_indexed timestamp for each source
         const updatedSources = sources.all.map(s => {
             const ttlDays = s.ttl_days || defaultTTL;
-            const wasIndexed = !this.shouldSkipSource(s.id, ttlDays, forceReindex);
+            const isOnlineSource = sources.online.find(os => os.id === s.id);
+            const isOfflineSource = sources.offline.find(os => os.id === s.id);
+            
+            // Determine if this source was actually indexed in this run
+            let wasIndexedNow = false;
+            if (onlineOnly && isOnlineSource) {
+                wasIndexedNow = !this.shouldSkipSource(s.id, ttlDays, forceReindex) || forceReindex;
+            } else if (localOnly && isOfflineSource) {
+                wasIndexedNow = true;
+            } else if (!onlineOnly && !localOnly) {
+                if (isOnlineSource) {
+                    wasIndexedNow = !this.shouldSkipSource(s.id, ttlDays, forceReindex) || forceReindex;
+                } else {
+                    wasIndexedNow = true;
+                }
+            }
+            
             const existing = this.index.sources.find(old => old.id === s.id);
             
             return {
@@ -605,7 +661,7 @@ class ContentIndexer {
                 description: s.description || '',
                 page_count: allPages.filter(p => p.source_id === s.id).length,
                 is_local: s.type === 'local',
-                last_indexed: wasIndexed || forceReindex ? new Date().toISOString() : (existing?.last_indexed || new Date().toISOString()),
+                last_indexed: wasIndexedNow ? new Date().toISOString() : (existing?.last_indexed || new Date().toISOString()),
                 ttl_days: ttlDays
             };
         });
@@ -627,7 +683,7 @@ class ContentIndexer {
         console.log(`   Total pages: ${allPages.length}`);
         console.log(`   Sources indexed: ${indexedCount}`);
         console.log(`   Sources skipped (TTL): ${skippedCount}`);
-        if (!forceReindex && skippedCount > 0) {
+        if (!forceReindex && skippedCount > 0 && !onlineOnly && !localOnly) {
             console.log(`\n💡 Tip: Use --force to re-index all sources regardless of TTL`);
         }
     }
@@ -964,11 +1020,18 @@ if (require.main === module) {
         } else {
             console.log('ENGRAM Indexer - Usage:');
             console.log('');
-            console.log('  npm run index              Smart incremental indexing (respects TTL)');
-            console.log('  npm run index -- --force   Force re-index all sources');
-            console.log('  node indexer.js cache      Cache pages for offline use');
-            console.log('  node indexer.js info       Show index status and source ages');
-            console.log('  node indexer.js search <q> Search the index');
+            console.log('  npm run index                  Smart incremental indexing (respects TTL)');
+            console.log('  npm run index -- --force       Force re-index all sources');
+            console.log('  npm run index -- --online      Index only online sources');
+            console.log('  npm run index -- --local       Index only local sources');
+            console.log('  npm run index -- --force --online    Force re-index online sources only');
+            console.log('  npm run index -- --force --local     Force re-index local sources only');
+            console.log('');
+            console.log('  node indexer.js cache          Cache pages for offline use');
+            console.log('  node indexer.js info           Show index status and source ages');
+            console.log('  node indexer.js search <q>     Search the index');
+            console.log('  node indexer.js update <file>  Update specific local file');
+            console.log('  node indexer.js remove <file>  Remove file from index');
             console.log('');
         }
     })();
