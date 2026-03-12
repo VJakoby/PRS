@@ -11,6 +11,8 @@ services:
       - ./sources.json:/app/sources.json:ro
       - ./data:/app/data
       - cache_data:/app/cache
+      # Mount local notes directory (configure in .env)
+      - ${NOTES_PATH:-./notes}:/app/notes:ro
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true

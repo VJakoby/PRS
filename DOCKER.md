@@ -8,6 +8,9 @@ docker compose build
 
 ### 2. Run indexing after editing `sources.json` 
 ```bash
+# Show usage commands
+docker compose run --rm engram npm run index -- --help
+
 # ALL sources (Index all defined sources
 docker compose run --rm engram npm run index
 
@@ -24,16 +27,15 @@ docker compose run --rm engram npm run index -- --online
 docker compose run --rm engram npm run index -- --force --online
 ---
 
-### 3. OPTIONAL: Build offline cache for sources(both online and local)
-Requires the `"cache_offline": true,` on specific sources
-```bash
+# OPTIONAL: Build offline cache for sources(both online and local)
+
 docker compose run --rm engram npm run cache
 ```
 ---
 
-### 4. Start the webserver
+### 3. Start the webserver
 ```bash
 docker compose up -d
----- OR ----
+# OR
 npm run docker:up
 ```

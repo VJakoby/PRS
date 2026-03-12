@@ -20,7 +20,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const cheerio = require('cheerio');
 const crypto = require('crypto');
-const RATE = 200;
+const RATE = 500;
 
 class ContentIndexer {
     constructor() {
@@ -97,10 +97,19 @@ class ContentIndexer {
     }
 
     resolvePath(configPath) {
+        // Relative paths (./notes or ../docs)
         if (configPath.startsWith('./') || configPath.startsWith('../')) {
             return path.resolve(__dirname, configPath);
         }
-        return configPath;
+        
+        // Absolute paths (/home/user/notes or C:\Users\...)
+        // Return as-is, let the OS handle it
+        if (path.isAbsolute(configPath)) {
+            return configPath;
+        }
+        
+        // Plain folder name (notes) - treat as relative to project root
+        return path.resolve(__dirname, configPath);
     }
 
     async findMarkdownFiles(directory, extensions = ['.md']) {
@@ -146,7 +155,14 @@ class ContentIndexer {
         try {
             await fs.access(resolvedPath);
         } catch (error) {
-            console.log(`  ⚠️  Directory does not exist: ${resolvedPath}`);
+            console.log(`  ❌ Directory does not exist: ${resolvedPath}`);
+            console.log(`  💡 Tips:`);
+            console.log(`     - Check the path in sources.json`);
+            console.log(`     - Use relative paths: "./notes" or "../docs"`);
+            console.log(`     - Use absolute paths: "/full/path/to/notes"`);
+            if (resolvedPath.includes('/home/')) {
+                console.log(`     - Docker: Mount host path as volume in docker-compose.yml`);
+            }
             return pages;
         }
         const extensions = source.file_extensions || ['.md'];
@@ -972,6 +988,37 @@ class ContentIndexer {
 if (require.main === module) {
     const indexer = new ContentIndexer();
     const command = process.argv[2];
+    
+    // Check for --help flag
+    if (process.argv.includes('--help') || process.argv.includes('-h')) {
+        console.log('ENGRAM Indexer - Usage:');
+        console.log('');
+        console.log('Indexing:');
+        console.log('  npm run index                  Smart incremental indexing (respects TTL)');
+        console.log('  npm run index -- --force       Force re-index all sources');
+        console.log('  npm run index -- --online      Index only online sources');
+        console.log('  npm run index -- --local       Index only local sources');
+        console.log('  npm run index -- --force --online    Force re-index online sources only');
+        console.log('  npm run index -- --force --local     Force re-index local sources only');
+        console.log('');
+        console.log('Other Commands:');
+        console.log('  node indexer.js cache          Cache pages for offline use');
+        console.log('  node indexer.js info           Show index status and source ages');
+        console.log('  node indexer.js search <q>     Search the index');
+        console.log('  node indexer.js update <file>  Update specific local file');
+        console.log('  node indexer.js remove <file>  Remove file from index');
+        console.log('');
+        console.log('Docker:');
+        console.log('  docker compose run --rm engram npm run index -- --help');
+        console.log('  docker compose run --rm engram npm run index -- --local');
+        console.log('');
+        console.log('Help:');
+        console.log('  npm run index -- --help        Show this help');
+        console.log('  node indexer.js --help         Show this help');
+        console.log('');
+        process.exit(0);
+    }
+    
     (async () => {
         await indexer.initialize();
         if (command === 'build' || command === 'rebuild') {

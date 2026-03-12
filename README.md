@@ -71,6 +71,7 @@ When running alongside PRAGMA in Docker, they communicate over a shared internal
 
 | Command | Description |
 |---|---|
+| `npm run index -- --help` | Show available commands |
 | `npm run index` | Smart incremental indexing (respects TTL) |
 | `npm run index -- --force` | Force re-index "all" sources regardless of TTL |
 | `npm run index -- --local` | Force re-index "local" sources regardless of TTL |
