@@ -1014,11 +1014,18 @@ if (require.main === module) {
         console.log('  npm run update <file>                   Update specific local file');
         console.log('  npm run remove <file>                   Remove file from index');
         console.log('');
+        console.log('Backup & Restore:');
+        console.log('  npm run backup                          Backup ./data to a timestamped zip');
+        console.log('  npm run restore                         Restore from latest backup in ./data');
+        console.log('  npm run restore -- data/backup-X.zip    Restore from a specific backup file');
+        console.log('');
         console.log('Docker Usage:');
         console.log('  docker compose run --rm engram npm run index');
         console.log('  docker compose run --rm engram npm run index -- --local');
         console.log('  docker compose run --rm engram npm run info');
         console.log('  docker compose run --rm engram npm run search "query"');
+        console.log('  docker compose run --rm engram npm run backup');
+        console.log('  docker compose run --rm engram npm run restore');
         console.log('');
         console.log('Examples:');
         console.log('  npm run index                           # Daily update (fast)');

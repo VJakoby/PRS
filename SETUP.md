@@ -32,17 +32,18 @@ npm start
 
 ```
 engram/
-├── indexer.js              # Core indexing logic
-├── server.js               # API server
-├── sources.json.template   # Template (tracked in git)
-├── sources.json            # Your config (NOT tracked - private)
-├── synonyms.json           # Search synonym expansions
+├── indexer.js                          # Core indexing logic
+├── server.js                           # API server
+├── sources.json.template               # Template (tracked in git)
+├── sources.json                        # Your config (NOT tracked - private)
+├── synonyms.json                       # Search synonym expansions
 ├── data/
-│   ├── index.json         # Generated search index
-│   ├── index.meta.json    # Index metadata
-│   └── cache/             # Offline cached pages
+│   ├── index.json                      # Generated search index
+│   ├── index.meta.json                 # Index metadata
+│   ├── cache/                          # Offline cached pages
+│   └── backup-YYYY-MM-DDTHH-mm-ss.zip  # Backup file
 └── public/
-    └── app.html           # Web interface
+    └── app.html                        # Web interface
 ```
 
 ---
@@ -228,6 +229,15 @@ npm run remove /path/to/file.md
 npm run help
 ```
 
+### Backup of index
+```bash
+npm run backup # Produces ./data/backup-2026-03-17T10-00-00.zip
+```
+
+### Restore of index
+```bash
+npm run restore # Auto-finds the latest zip in /data/
+```
 ---
 
 ## 🐛 Troubleshooting
@@ -330,41 +340,6 @@ Smart incremental - only updates sources outside TTL.
 npm run index -- --force  # ~15 minutes
 ```
 Complete re-index of everything.
-
----
-
-## 🔐 Security Note
-
-**Never commit `sources.json` to public repositories!**
-
-It may contain:
-- Private file paths
-- Internal documentation URLs
-- Your personal note locations
-
-The `.gitignore` file prevents this, but always double-check:
-```bash
-git status  # sources.json should NOT appear
-```
-
----
-
-## 📖 Documentation
-
-- **[CONFIGURATION-GUIDE.md](./CONFIGURATION-GUIDE.md)** - Complete settings reference
-- **[TTL-SIMPLE-GUIDE.md](./TTL-SIMPLE-GUIDE.md)** - Quick TTL guide
-- **[README.md](./README.md)** - Full documentation
-- `sources.json.template` - Configuration template
-
----
-
-## 🆘 Getting Help
-
-1. Check index status: `node indexer.js info`
-2. Check server logs in terminal
-3. Verify `sources.json` syntax (valid JSON)
-4. Try `npm run index -- --force` to rebuild
-5. Check documentation links above
 
 ---
 

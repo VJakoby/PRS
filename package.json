@@ -13,6 +13,8 @@
     "search": "node indexer.js search",
     "update": "node indexer.js update",
     "remove": "node indexer.js remove",
+    "backup": "node node scripts/backup",
+    "restore": "node scripts/restore",
     "help": "node indexer.js --help"
   },
   "keywords": [
