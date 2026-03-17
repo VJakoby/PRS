@@ -29,5 +29,5 @@ volumes:
 
 networks:
   pragma-net:
-    external: true
     name: pragma-net
+    driver: bridge
