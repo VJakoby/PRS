@@ -1,18 +1,24 @@
-FROM node:20-alpine
-RUN npm install -g npm@latest
+FROM node:18-alpine
+
 WORKDIR /app
 
-# Install deps first for layer caching
+# Copy package files
 COPY package*.json ./
+
+# Install production dependencies only
 RUN npm ci --omit=dev
 
-# Copy app source
-COPY . .
+# Copy application files
+COPY indexer.js .
+COPY server.js .
+COPY synonyms.json .
+COPY public ./public/
 
-# Create necessary dirs and lock down ownership
-RUN mkdir -p cache data/cache/online && \
-    chown -R node:node /app
+# Create directories
+RUN mkdir -p data cache
 
-USER node
+# Expose port
 EXPOSE 3002
-CMD ["npm", "run", "start"]
+
+# Start server
+CMD ["npm", "start"]
