@@ -1,9 +1,9 @@
 {
-  "name": "engram",
+  "name": "engram-kb-indexer",
   "version": "1.0.0",
-  "description": "Knowledge base indexer for PRAGMA AI pentesting assistant",
+  "description": "Knowledge base indexer",
   "main": "server.js",
-  
+
   "scripts": {
     "start": "node server.js",
     "index": "node indexer.js",
@@ -18,9 +18,7 @@
   "keywords": [
     "knowledge-base",
     "indexer",
-    "search",
-    "pentesting",
-    "documentation"
+    "search"
   ],
   "author": "VJakoby + 🤖",
   "license": "GPL-3.0",
@@ -28,7 +26,8 @@
     "express": "^4.18.2",
     "axios": "^1.6.0",
     "cheerio": "^1.0.0-rc.12",
-    "marked": "^11.0.0"
+    "marked": "^11.0.0",
+    "cors": "^2.8.5"
   },
   "engines": {
     "node": ">=18.0.0"
