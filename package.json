@@ -6,7 +6,7 @@
 
   "scripts": {
     "start": "node server.js",
-    "index": "node indexer.js",
+    "index": "node indexer.js build ",
     "cache": "node indexer.js cache",
     "cache-status": "node indexer.js cache-status",
     "info": "node indexer.js info",

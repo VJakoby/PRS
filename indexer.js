@@ -1031,7 +1031,7 @@ if (require.main === module) {
     
     (async () => {
         await indexer.initialize();
-        if (command === 'build' || command === 'rebuild') {
+        if (!command || command === 'build' || command === 'rebuild' || command.startsWith('--')) {
             await indexer.buildIndex();
         } else if (command === 'cache') {
             const sources = await indexer.loadSources();
