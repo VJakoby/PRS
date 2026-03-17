@@ -133,6 +133,9 @@ npm run index -- --force --local
 - `max_pages_per_source` - Limit pages per source (null = unlimited)
 - `timeout_seconds` - HTTP timeout (default: 15)
 - `retry_attempts` - Retry failed requests (default: 2)
+
+See [Configuration Guide](./CONFIGURATION-GUIDE.md) for complete reference.
+
 ---
 
 ## 🔧 Common Tasks
@@ -179,12 +182,98 @@ npm run index -- --local
 
 ### Update Single File
 ```bash
-node indexer.js update /path/to/file.md
+npm run update /path/to/file.md
 ```
 
 ### Check Index Status
 ```bash
+npm run info
+```
+
+**Example output:**
+```
+📊 ENGRAM Index Status
+   Total pages: 292
+   Last updated: 2026-03-10T15:30:00.000Z
+
+📚 Sources:
+   - HackTricks: 143 pages (indexed 2 days ago, TTL: 7d)
+   - Local Notes: 45 pages (indexed today, TTL: 7d)
+```
+
+---
+
+### Search the Index
+```bash
+npm run search "sql injection"
+```
+
+### Cache for Offline Use
+```bash
+npm run cache
+```
+
+Check cache status:
+```bash
+npm run cache-status
+```
+
+### Remove File from Index
+```bash
+npm run remove /path/to/file.md
+```
+
+### CLI Help
+```bash
+npm run help
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### "sources.json not found"
+```bash
+cp sources.json.template sources.json
+```
+
+### Git keeps tracking sources.json
+```bash
+git rm --cached sources.json
+git commit -m "Stop tracking sources.json"
+```
+
+### Index seems outdated
+```bash
+# Check current status
 node indexer.js info
+
+# Force update everything
+npm run index -- --force
+
+# Or just update online sources
+npm run index -- --force --online
+```
+
+### Too many timeouts
+Increase timeout in `sources.json`:
+```json
+{
+  "index_settings": {
+    "timeout_seconds": 30,
+    "retry_attempts": 3
+  }
+}
+```
+
+### Index too large
+Limit pages per source:
+```json
+{
+  "index_settings": {
+    "max_pages_per_source": 100
+  }
+}
 ```
 
 ---
@@ -212,12 +301,12 @@ npm run cache-status
 
 ### Remove File from Index
 ```bash
-node indexer.js remove /path/to/file.md
+npm run remove /path/to/file.md
 ```
 
 ### CLI Search
 ```bash
-node indexer.js search "sql injection"
+npm run search "sql injection"
 ```
 
 ---
@@ -242,10 +331,28 @@ npm run index -- --force  # ~15 minutes
 ```
 Complete re-index of everything.
 
+---
+
+## 🔐 Security Note
+
+**Never commit `sources.json` to public repositories!**
+
+It may contain:
+- Private file paths
+- Internal documentation URLs
+- Your personal note locations
+
+The `.gitignore` file prevents this, but always double-check:
+```bash
+git status  # sources.json should NOT appear
+```
 
 ---
 
 ## 📖 Documentation
+
+- **[CONFIGURATION-GUIDE.md](./CONFIGURATION-GUIDE.md)** - Complete settings reference
+- **[TTL-SIMPLE-GUIDE.md](./TTL-SIMPLE-GUIDE.md)** - Quick TTL guide
 - **[README.md](./README.md)** - Full documentation
 - `sources.json.template` - Configuration template
 
@@ -279,6 +386,7 @@ Done! 🎉
 
 ## 🎯 Quick Reference
 
+### Indexing Commands
 | Command | Description | Time |
 |---------|-------------|------|
 | `npm run index` | Smart incremental update | ~5-30s |
@@ -287,6 +395,23 @@ Done! 🎉
 | `npm run index -- --local` | Index only local files | ~5s |
 | `npm run index -- --force --online` | Force online re-index | ~10min |
 | `npm run index -- --force --local` | Force local re-index | ~5s |
-| `node indexer.js info` | Show index status | instant |
-| `node indexer.js update <file>` | Update single file | instant |
+
+### Information & Search
+| Command | Description | Time |
+|---------|-------------|------|
+| `npm run info` | Show index status | instant |
+| `npm run search "query"` | Search the index | instant |
+| `npm run help` | Show help | instant |
+
+### Cache & File Management
+| Command | Description | Time |
+|---------|-------------|------|
+| `npm run cache` | Cache pages for offline use | varies |
+| `npm run cache-status` | Check cache status | instant |
+| `npm run update <file>` | Update single file | instant |
+| `npm run remove <file>` | Remove file from index | instant |
+
+### Server
+| Command | Description | Time |
+|---------|-------------|------|
 | `npm start` | Start API server | instant |

@@ -9,8 +9,9 @@ sources copy.json
 data/
 *.meta.json
 
-# Offline notes (uncomment if you want to keep notes private)
+.env
 
+# Offline notes (uncomment if you want to keep notes private)
 
 # Logs
 *.log

@@ -1,34 +1,36 @@
 {
-  "name": "engram-knowledge-base-indexer",
-  "version": "1.0",
-  "description": "High-performance indexed search engine for local knowledge bases with fuzzy matching and advanced scoring.",
+  "name": "engram",
+  "version": "1.0.0",
+  "description": "Knowledge base indexer for PRAGMA AI pentesting assistant",
   "main": "server.js",
+  
   "scripts": {
     "start": "node server.js",
-    "index": "node indexer.js build",
-    "update": "node indexer.js update",
+    "index": "node indexer.js",
     "cache": "node indexer.js cache",
     "cache-status": "node indexer.js cache-status",
-    "remove": "node indexer.js remove",
-    "search": "node indexer.js search",
     "info": "node indexer.js info",
-    "docker:build": "docker compose build",
-    "docker:index": "docker compose run --rm app npm run index",
-    "docker:cache": "docker compose run --rm app npm run cache",
-    "docker:up": "docker compose up -d",
-    "docker:down": "docker compose down"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "axios": "^1.13.5",
-    "cors": "^2.8.5",
-    "cheerio": "^1.0.0-rc.12"
+    "search": "node indexer.js search",
+    "update": "node indexer.js update",
+    "remove": "node indexer.js remove",
+    "help": "node indexer.js --help"
   },
   "keywords": [
-    "search",
+    "knowledge-base",
     "indexer",
-    "kb"
+    "search",
+    "pentesting",
+    "documentation"
   ],
-  "author": "VJakoby",
-  "license": "MIT"
+  "author": "VJakoby + 🤖",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "marked": "^11.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }
