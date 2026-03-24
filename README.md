@@ -1,4 +1,4 @@
-# 🔎 ENGRAM — Knowledge Base Indexer
+# 🔎 ENGRAM — Indexed Search Surface
 
 > A fast local tool for searching indexed documentation — both online sources and local markdown files.
 

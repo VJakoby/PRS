@@ -1,7 +1,7 @@
 # AI Disclosure & Provenance
 
 ### 🏗️ Architectural Ownership
-The **ENGRAM-knowledge-base-indexer** was conceptualized, architected, and directed by **VJakoby**. 
+The **ENGRAM-indexed-search-surface** was conceptualized, architected, and directed by **VJakoby**. 
 
 The human architect defined and oversaw the following core systems:
 * **The Indexing & Scoring Engine:** The strategy for fuzzy search matching and the hierarchical scoring system for search results.

@@ -1,8 +1,8 @@
-name: engram-kb-indexer
+name: engram-indexed-search-surface
 services:
   engram:
     build: .
-    container_name: engram-kb-indexer
+    container_name: engram-indexed-search-surface
     ports:
       - "127.0.0.1:3002:3002"    # accessible from host
     networks:

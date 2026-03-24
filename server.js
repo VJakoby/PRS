@@ -82,7 +82,7 @@ app.get('/api/status', (req, res) => {
 
 // API: Search
 app.post('/api/search', async (req, res) => {
-    const { query, fuzzy = true } = req.body;
+    const { query, fuzzy = true, fuzzyMode } = req.body;
     
     if (!indexReady) {
         return res.status(503).json({
@@ -98,7 +98,10 @@ app.post('/api/search', async (req, res) => {
 
     try {
         const startTime = Date.now();
-        const results = indexer.search(query, { fuzzy });
+        const resolvedFuzzyMode = typeof fuzzyMode === 'string'
+            ? fuzzyMode
+            : (fuzzy === false ? 'off' : 'normal');
+        const results = indexer.search(query, { fuzzy, fuzzyMode: resolvedFuzzyMode });
         const searchTime = Date.now() - startTime;
         
         const topResults = results.slice(0, 50).map(r => ({
@@ -141,6 +144,78 @@ app.get('/api/sources', (req, res) => {
     });
 });
 
+function normalizePathForCompare(filePath) {
+    return path.normalize(filePath).replace(/\\/g, '/');
+}
+
+function translatePathBetweenRoots(filePath, fromRoot, toRoot) {
+    if (!filePath || !fromRoot || !toRoot) return null;
+
+    const normalizedFile = normalizePathForCompare(filePath);
+    const normalizedFrom = normalizePathForCompare(fromRoot).replace(/\/$/, '');
+    const normalizedTo = normalizePathForCompare(toRoot).replace(/\/$/, '');
+
+    if (normalizedFile === normalizedFrom) {
+        return normalizedTo;
+    }
+
+    if (!normalizedFile.startsWith(`${normalizedFrom}/`)) {
+        return null;
+    }
+
+    const relativePath = normalizedFile.slice(normalizedFrom.length + 1);
+    return normalizePathForCompare(path.join(normalizedTo, relativePath));
+}
+
+async function getLocalSourceRoots() {
+    const sources = await indexer.loadSources();
+    const configuredRoots = (sources.offline || []).map(source => indexer.resolvePath(source.path));
+    const roots = new Set(configuredRoots.map(root => normalizePathForCompare(root)));
+
+    if (process.env.NOTES_PATH) {
+        roots.add(normalizePathForCompare(process.env.NOTES_PATH));
+    }
+
+    roots.add('/app/notes');
+    return [...roots];
+}
+
+function buildPathVariants(filePath, roots) {
+    const variants = new Set();
+    const normalizedFile = normalizePathForCompare(filePath);
+    variants.add(normalizedFile);
+
+    roots.forEach(fromRoot => {
+        roots.forEach(toRoot => {
+            const translated = translatePathBetweenRoots(normalizedFile, fromRoot, toRoot);
+            if (translated) variants.add(translated);
+        });
+    });
+
+    return [...variants];
+}
+
+function findIndexedLocalPage(filePath, roots) {
+    const requestedVariants = new Set(buildPathVariants(filePath, roots));
+
+    return indexer.index.pages.find(page => {
+        if (!page.is_local || !page.file_path) return false;
+        const pageVariants = buildPathVariants(page.file_path, roots);
+        return pageVariants.some(variant => requestedVariants.has(variant));
+    }) || null;
+}
+
+async function findReadablePath(candidatePaths) {
+    for (const candidate of candidatePaths) {
+        try {
+            await fs.access(candidate);
+            return candidate;
+        } catch (error) {}
+    }
+
+    return null;
+}
+
 // API: Preview local markdown file
 app.get('/api/preview', async (req, res) => {
     const { file } = req.query;
@@ -150,12 +225,27 @@ app.get('/api/preview', async (req, res) => {
     }
     
     try {
-        const page = indexer.index.pages.find(p => p.file_path === file);
+        const localRoots = await getLocalSourceRoots();
+        const page = findIndexedLocalPage(file, localRoots);
         if (!page) {
             return res.status(404).json({ error: 'File not found in index' });
         }
-        
-        const content = await fs.readFile(file, 'utf-8');
+
+        const requestedCandidates = buildPathVariants(file, localRoots);
+        const indexedCandidates = buildPathVariants(page.file_path, localRoots);
+        const resolvedPath = await findReadablePath([
+            ...requestedCandidates,
+            ...indexedCandidates
+        ]);
+
+        if (!resolvedPath) {
+            return res.status(404).json({
+                error: 'File exists in index but is not readable from this runtime',
+                file_path: page.file_path
+            });
+        }
+
+        const content = await fs.readFile(resolvedPath, 'utf-8');
         const html = convertMarkdownToHTML(content);
         
         res.json({
@@ -163,7 +253,8 @@ app.get('/api/preview', async (req, res) => {
             page_name: page.page_name,
             html: html,
             raw: content,
-            file_path: file
+            file_path: page.file_path,
+            resolved_path: resolvedPath
         });
     } catch (error) {
         console.error('Preview error:', error);

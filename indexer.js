@@ -351,6 +351,41 @@ class ContentIndexer {
         return { text: snippet, highlightStart, highlightLength: searchTerm.length };
     }
 
+    normalizeForSearch(text) {
+        return (text || '')
+            .toLowerCase()
+            .replace(/[`"'()[\]{}<>]/g, ' ')
+            .replace(/[^a-z0-9]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    tokenizeSearchTerms(text) {
+        return this.normalizeForSearch(text)
+            .split(' ')
+            .filter(term => term.length >= 2);
+    }
+
+    countOccurrences(text, term) {
+        if (!text || !term) return 0;
+        const safeRe = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return (text.match(new RegExp(safeRe, 'g')) || []).length;
+    }
+
+    buildSnippet(page, primaryQuery, allTerms) {
+        const snippetTerms = [primaryQuery, ...allTerms]
+            .map(term => (term || '').trim().toLowerCase())
+            .filter(Boolean)
+            .sort((a, b) => b.length - a.length);
+
+        for (const term of snippetTerms) {
+            const snippet = this.extractSnippet(page.content, term);
+            if (snippet.text) return snippet;
+        }
+
+        return { text: '', highlightStart: -1, highlightLength: 0 };
+    }
+
     async jitter() {
         const delay = RATE * (0.8 + Math.random() * 0.4);
         await new Promise(resolve => setTimeout(resolve, delay));
@@ -733,16 +768,20 @@ class ContentIndexer {
     }
 
     search(query, options = {}) {
-        const fuzzyMatch = options.fuzzy !== false;
+        const fuzzyMode = options.fuzzyMode || (options.fuzzy === false ? 'off' : 'normal');
+        const fuzzyMatch = fuzzyMode !== 'off';
         const context    = options.context || null;
         const hasContext = context && context.active;
 
         const originalTerm = query.toLowerCase().trim();
-        const expandedStr  = this.expandQuery(query).toLowerCase().trim();
-        const allTerms = [originalTerm];
-        expandedStr.split(/\s+/).forEach(t => {
-            if (t && !allTerms.includes(t)) allTerms.push(t);
+        const expandedStr = this.expandQuery(query).toLowerCase().trim();
+        const originalTerms = this.tokenizeSearchTerms(query);
+        const expandedTerms = this.tokenizeSearchTerms(expandedStr);
+        const allTerms = [];
+        [originalTerm, ...originalTerms, ...expandedTerms].forEach(term => {
+            if (term && !allTerms.includes(term)) allTerms.push(term);
         });
+        const normalizedQuery = this.normalizeForSearch(query);
 
         const results = [];
 
@@ -753,47 +792,109 @@ class ContentIndexer {
 
             const titleLower    = page.title.toLowerCase();
             const pageNameLower = page.page_name.toLowerCase();
-            const contentLower  = page.content;
+            const contentLower  = (page.content || '').toLowerCase();
             const urlLower      = page.url.toLowerCase();
+            const normalizedTitle = this.normalizeForSearch(page.title);
+            const normalizedPageName = this.normalizeForSearch(page.page_name);
+            const normalizedUrl = this.normalizeForSearch(page.url);
+            const normalizedContent = this.normalizeForSearch(page.content);
+            const localContentWeight = page.is_local ? 1.8 : 1.0;
+            let matchedTerms = 0;
+
+            if (originalTerm && titleLower === originalTerm) {
+                score += 120;
+                matchType = matchType || 'exact_title';
+            } else if (originalTerm && titleLower.includes(originalTerm)) {
+                score += 70;
+                matchType = matchType || 'title_contains';
+            }
+
+            if (normalizedQuery) {
+                if (normalizedTitle.includes(normalizedQuery)) {
+                    score += 90;
+                    matchType = matchType || 'title_contains';
+                }
+                if (normalizedPageName.includes(normalizedQuery)) {
+                    score += 65;
+                    matchType = matchType || 'page_name';
+                }
+                if (normalizedUrl.includes(normalizedQuery)) {
+                    score += 25;
+                    matchType = matchType || 'url';
+                }
+                if (normalizedContent.includes(normalizedQuery)) {
+                    score += Math.round(45 * localContentWeight);
+                    matchType = matchType || 'content_phrase';
+                }
+            }
 
             for (let ti = 0; ti < allTerms.length; ti++) {
                 const term   = allTerms[ti];
                 const weight = ti === 0 ? 1.0 : 0.6;
+                let termMatched = false;
 
                 if (titleLower === term) {
                     score += Math.round(100 * weight);
                     if (!matchType) matchType = 'exact_title';
+                    termMatched = true;
                 }
                 else if (titleLower.includes(term)) {
                     score += Math.round(50 * weight);
                     if (!matchType) matchType = 'title_contains';
+                    termMatched = true;
                 }
 
                 if (pageNameLower.includes(term)) {
                     score += Math.round(30 * weight);
                     if (!matchType) matchType = 'page_name';
+                    termMatched = true;
                 }
 
                 if (urlLower.includes(term)) {
                     score += Math.round(20 * weight);
                     if (!matchType) matchType = 'url';
+                    termMatched = true;
                 }
 
-                const safeRe = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const occurrences = (contentLower.match(new RegExp(safeRe, 'g')) || []).length;
+                const occurrences = this.countOccurrences(contentLower, term);
                 if (occurrences > 0) {
-                    score += Math.round(occurrences * 2 * weight);
+                    score += Math.round(Math.min(occurrences, 8) * 5 * weight * localContentWeight);
                     if (!matchType) matchType = 'content';
+                    termMatched = true;
                 }
 
-                if (fuzzyMatch && score === 0 && ti === 0) {
+                const normalizedOccurrences = this.countOccurrences(normalizedContent, this.normalizeForSearch(term));
+                if (normalizedOccurrences > 0) {
+                    score += Math.round(Math.min(normalizedOccurrences, 8) * 4 * weight * localContentWeight);
+                    if (!matchType) matchType = 'content_normalized';
+                    termMatched = true;
+                }
+
+                if (termMatched) {
+                    matchedTerms++;
+                }
+
+                if (fuzzyMatch && !termMatched && ti < Math.max(originalTerms.length, 1)) {
                     const fScore = this.fuzzySearch(term, titleLower) +
-                                   this.fuzzySearch(term, pageNameLower);
-                    if (fScore > 0.7) {
-                        score += Math.floor(fScore * 10);
+                                   this.fuzzySearch(term, pageNameLower) +
+                                   (fuzzyMode === 'prefer' ? this.fuzzySearch(term, normalizedContent) * 0.35 : 0);
+                    const threshold = fuzzyMode === 'prefer' ? 0.55 : 0.7;
+                    if (fScore > threshold) {
+                        score += Math.floor(fScore * (fuzzyMode === 'prefer' ? 16 : 10));
                         matchType = 'fuzzy';
                     }
                 }
+            }
+
+            if (originalTerms.length > 1 && matchedTerms >= originalTerms.length) {
+                score += Math.round(35 * localContentWeight);
+                if (!matchType) matchType = 'all_terms';
+            } else if (matchedTerms >= 2) {
+                score += Math.round(15 * localContentWeight);
+            }
+
+            if (page.is_local && matchedTerms > 0) {
+                score += 10;
             }
 
             if (score > 0 && titleLower.length < 50) score += 5;
@@ -827,7 +928,7 @@ class ContentIndexer {
                     ...page,
                     relevance_score: score,
                     match_type:      matchType,
-                    snippet:         this.extractSnippet(page.content, originalTerm),
+                    snippet:         this.buildSnippet(page, originalTerm, allTerms),
                     context_boosted: contextBoosted
                 });
             }
