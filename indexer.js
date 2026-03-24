@@ -711,7 +711,7 @@ class ContentIndexer {
                 type: s.type,
                 description: s.description || '',
                 page_count: allPages.filter(p => p.source_id === s.id).length,
-                is_local: s.type === 'local',
+                is_local: Boolean(isOfflineSource),
                 last_indexed: wasIndexedNow ? new Date().toISOString() : (existing?.last_indexed || new Date().toISOString()),
                 ttl_days: ttlDays
             };
