@@ -1,4 +1,4 @@
-# 🔎 ENGRAM — Knowledge Base Indexer
+# 🔎 ENGRAM — Indexed Search Surface
 
 > A fast local tool for searching indexed documentation — both online sources and local markdown files.
 
@@ -64,6 +64,47 @@ docker-compose up --build
 ENGRAM will be available at `http://localhost:3002`.
 
 When running alongside PRAGMA in Docker, they communicate over a shared internal network (`http://engram:3002`). See PRAGMA's [DOCKER.md](https://github.com/VJakoby/pragma/blob/main/DOCKER.md) for the combined setup.
+
+### Local Notes in Docker
+
+For Docker-first setups, local markdown notes should be mounted into the container and referenced by container paths in `sources.json`.
+
+Single parent directory:
+```env
+NOTES_PATH=/home/user/pentest-notes
+```
+
+```json
+"offline_sources": [
+  {
+    "id": "oscp",
+    "path": "/app/notes/OSCP",
+    "enabled": true
+  },
+  {
+    "id": "ad",
+    "path": "/app/notes/ActiveDirectory",
+    "enabled": true
+  }
+]
+```
+
+Multiple unrelated note roots:
+```env
+NOTES_PATH=/home/user/notes-main
+NOTES_PATH_2=/mnt/archive/redteam-notes
+NOTES_PATH_3=/srv/wiki/export
+```
+
+```json
+"offline_sources": [
+  { "id": "main", "path": "/app/notes", "enabled": true },
+  { "id": "archive", "path": "/app/notes-2", "enabled": true },
+  { "id": "wiki", "path": "/app/notes-3", "enabled": true }
+]
+```
+
+If `NOTES_PATH_2` or `NOTES_PATH_3` are unused, leave them empty and disable the corresponding offline sources. Empty values fall back to internal empty directories, so you do not get duplicate mounts by accident.
 
 ---
 

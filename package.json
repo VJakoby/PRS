@@ -1,7 +1,7 @@
 {
-  "name": "engram-kb-indexer",
+  "name": "engram-indexed-search-surface",
   "version": "1.0.0",
-  "description": "Knowledge base indexer",
+  "description": "Indexed Search Surface",
   "main": "server.js",
 
   "scripts": {
@@ -13,6 +13,8 @@
     "search": "node indexer.js search",
     "update": "node indexer.js update",
     "remove": "node indexer.js remove",
+    "backup": "node node scripts/backup",
+    "restore": "node scripts/restore",
     "help": "node indexer.js --help"
   },
   "keywords": [

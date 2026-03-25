@@ -1,8 +1,8 @@
-name: engram-kb-indexer
+name: engram
 services:
   engram:
     build: .
-    container_name: engram-kb-indexer
+    container_name: engram
     ports:
       - "127.0.0.1:3002:3002"    # accessible from host
     networks:
@@ -11,8 +11,11 @@ services:
       - ./sources.json:/app/sources.json:ro
       - ./data:/app/data
       - cache_data:/app/cache
-      # Mount local notes directory (configure in .env)
+      # Primary local notes directory (single-root/default setup)
       - ${NOTES_PATH:-./notes}:/app/notes:ro
+      # Optional additional local notes directories
+      - ${NOTES_PATH_2:-./.docker-empty/notes-2}:/app/notes-2:ro
+      - ${NOTES_PATH_3:-./.docker-empty/notes-3}:/app/notes-3:ro
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -29,5 +32,6 @@ volumes:
 
 networks:
   pragma-net:
+    external: true
     name: pragma-net
-    driver: bridge
+    #driver: bridge

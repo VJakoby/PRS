@@ -26,7 +26,7 @@
     <title>ENGRAM</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -35,40 +35,45 @@
         }
 
         :root {
-            /* PRAGMA-inspired colors - dark mode */
-            --bg-primary: #1a1a1f;
-            --bg-secondary: #1f1f26;
-            --bg-tertiary: #26262f;
-            --border-color: #35353f;
-            --text-primary: #c9d8ec;
-            --text-secondary: #8fa3bc;
-            --accent-blue: #7c3aed;
-            --accent-blue-hover: #6d28d9;
-            --accent-green: #34d399;
-            --accent-green-hover: #10b981;
-            --accent-purple: #a78bfa;
+            --bg-primary: #091117;
+            --bg-secondary: rgba(11, 24, 34, 0.88);
+            --bg-tertiary: #122431;
+            --bg-elevated: rgba(14, 29, 40, 0.96);
+            --border-color: rgba(100, 163, 188, 0.24);
+            --border-strong: rgba(125, 211, 252, 0.45);
+            --text-primary: #e6f1f7;
+            --text-secondary: #93abbb;
+            --text-muted: #6d8291;
+            --accent-blue: #4fd1c5;
+            --accent-blue-hover: #7dd3fc;
+            --accent-green: #22c55e;
+            --accent-green-hover: #16a34a;
+            --accent-amber: #f59e0b;
             --accent-red: #f87171;
-            --shadow-color: rgba(124, 58, 237, 0.15);
+            --shadow-color: rgba(79, 209, 197, 0.16);
         }
 
         [data-theme="light"] {
-            --bg-primary: #f1f5f9;
-            --bg-secondary: #ffffff;
-            --bg-tertiary: #e8eef6;
-            --border-color: #c8d7e8;
-            --text-primary: #1a2535;
-            --text-secondary: #3a5068;
-            --accent-blue: #5b21b6;
-            --accent-blue-hover: #6d28d9;
-            --accent-green: #059669;
-            --accent-green-hover: #047857;
-            --accent-purple: #7c3aed;
-            --accent-red: #dc2626;
-            --shadow-color: rgba(91, 33, 182, 0.12);
+            --bg-primary: #edf3f5;
+            --bg-secondary: rgba(255, 255, 255, 0.92);
+            --bg-tertiary: #dbe7ee;
+            --bg-elevated: rgba(255, 255, 255, 0.98);
+            --border-color: rgba(34, 78, 104, 0.18);
+            --border-strong: rgba(8, 145, 178, 0.35);
+            --text-primary: #10202c;
+            --text-secondary: #466173;
+            --text-muted: #688292;
+            --accent-blue: #0f766e;
+            --accent-blue-hover: #0891b2;
+            --accent-green: #15803d;
+            --accent-green-hover: #166534;
+            --accent-amber: #b45309;
+            --accent-red: #b91c1c;
+            --shadow-color: rgba(15, 118, 110, 0.1);
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
             font-weight: 500;
             -webkit-font-smoothing: antialiased;
             background: var(--bg-primary);
@@ -76,89 +81,102 @@
             min-height: 100vh;
             transition: background-color 0.3s ease, color 0.3s ease;
             line-height: 1.6;
+            background-image:
+                radial-gradient(circle at top left, rgba(79, 209, 197, 0.12), transparent 30%),
+                radial-gradient(circle at top right, rgba(245, 158, 11, 0.08), transparent 24%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 30%);
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 28px 28px;
+            mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.7), transparent 92%);
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 980px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 12px 12px 28px;
         }
 
-        /* Header - Professional with logo */
         .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 32px 0;
-            border-bottom: 2px solid var(--border-color);
-            margin-bottom: 40px;
-        }
-
-        .logo {
             display: flex;
             align-items: center;
             gap: 12px;
+            margin-bottom: 10px;
+            padding: 8px 10px;
+            background: rgba(9, 18, 26, 0.82);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
         }
 
         .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-            border-radius: 4px;
+            width: 34px;
+            height: 34px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: rgba(79, 209, 197, 0.08);
+            color: var(--accent-blue);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 15px;
+            font-weight: 600;
         }
 
         .logo-text h1 {
-            font-size: 24px;
+            font-size: 17px;
             font-weight: 700;
-            color: var(--text-primary);
-            letter-spacing: -0.5px;
-            margin: 0;
+            letter-spacing: -0.02em;
         }
 
         .logo-text p {
-            font-size: 13px;
+            margin-top: 2px;
             color: var(--text-secondary);
-            font-weight: 500;
-            margin: 0;
+            font-size: 10px;
+            font-family: 'IBM Plex Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
         }
 
-        .theme-toggle {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 10px 18px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .theme-toggle:hover {
-            background: var(--bg-tertiary);
-            border-color: var(--accent-blue);
-        }
-
-        .theme-toggle-text {
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-
-        /* Search Section - Prominent box */
         .search-section {
-            background: var(--bg-secondary);
-            border: 2px solid var(--border-color);
-            border-radius: 4px;
-            padding: 32px;
-            margin-bottom: 32px;
+            background: rgba(9, 18, 26, 0.86);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 8px;
+        }
+
+        .search-section-header {
+            margin-bottom: 8px;
+        }
+
+        .panel-kicker {
+            color: var(--accent-blue);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 4px;
+        }
+
+        .search-panel-title {
+            font-size: 15px;
+            line-height: 1.2;
+            letter-spacing: -0.01em;
+            margin-bottom: 2px;
+        }
+
+        .search-panel-copy {
+            color: var(--text-secondary);
+            font-size: 11px;
         }
 
         .search-box {
@@ -167,50 +185,54 @@
 
         #searchInput {
             width: 100%;
-            padding: 16px 20px;
-            font-size: 16px;
-            background: var(--bg-primary);
-            border: 2px solid var(--border-color);
-            border-radius: 4px;
+            padding: 10px 12px;
+            font-size: 13px;
+            background: rgba(3, 9, 14, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
             color: var(--text-primary);
             transition: all 0.2s;
             outline: none;
+            font-family: 'IBM Plex Mono', monospace;
         }
 
         #searchInput:focus {
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 0 3px var(--shadow-color);
+            border-color: var(--border-strong);
+            box-shadow: 0 0 0 2px var(--shadow-color);
         }
 
         .search-hint {
             color: var(--text-secondary);
-            font-size: 13px;
-            margin-top: 12px;
-            text-align: center;
+            font-size: 10px;
+            margin-top: 6px;
+            font-family: 'IBM Plex Mono', monospace;
         }
         
 
         /* Filter Pills - Squared buttons */
         .filters {
             display: flex;
-            gap: 14px;
-            margin-top: 24px;
+            gap: 8px;
+            margin-top: 10px;
             flex-wrap: wrap;
-            justify-content: center;
+            justify-content: space-between;
         }
 
         .filter-group {
             display: flex;
-            gap: 8px;
+            gap: 5px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .filter-label {
-            font-size: 13px;
+            font-size: 10px;
             font-weight: 600;
-            color: var(--text-secondary);
+            color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.12em;
+            font-family: 'IBM Plex Mono', monospace;
+            margin-right: 4px;
         }
 
         .filter-group label {
@@ -224,12 +246,12 @@
         }
 
         .filter-group label span {
-            padding: 8px 16px;
-            background: var(--bg-primary);
-            border: 2px solid var(--border-color);
-            border-radius: 4px;
+            padding: 5px 8px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 7px;
             color: var(--text-secondary);
-            font-size: 13px;
+            font-size: 10px;
             font-weight: 600;
             transition: all 0.2s;
             display: inline-block;
@@ -238,7 +260,7 @@
         .filter-group input[type="radio"]:checked + span {
             background: var(--accent-blue);
             border-color: var(--accent-blue);
-            color: white;
+            color: #081116;
         }
 
         .filter-group label:hover span {
@@ -248,8 +270,12 @@
         /* Loading */
         .loading {
             text-align: center;
-            padding: 40px;
+            padding: 14px;
             display: none;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            margin-bottom: 8px;
         }
 
         .spinner {
@@ -272,9 +298,9 @@
             display: none;
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 12px 20px;
-            margin-bottom: 20px;
+            border-radius: 10px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
         }
 
         .results-stats {
@@ -298,35 +324,64 @@
         .results {
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 6px;
         }
 
         .result-item {
-            background: var(--bg-secondary);
+            background: rgba(10, 21, 30, 0.88);
             border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 20px;
+            border-radius: 10px;
+            padding: 10px;
             transition: all 0.2s;
             position: relative;
+            overflow: hidden;
         }
 
         .result-item:hover {
-            border-color: var(--accent-blue);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            border-color: var(--border-strong);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .result-item::before {
+            content: '';
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--accent-blue), rgba(79, 209, 197, 0));
         }
 
         .result-item.keyboard-selected {
-            border-color: var(--accent-blue) !important;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+            border-color: var(--border-strong) !important;
+            box-shadow: 0 0 0 2px var(--shadow-color);
+        }
+
+        .result-topline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            color: var(--text-muted);
+            font-size: 10px;
+            font-family: 'IBM Plex Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .result-kind {
+            padding: 3px 6px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
         }
 
         .result-header {
             display: flex;
             justify-content: space-between;
             align-items: start;
-            gap: 15px;
-            margin-bottom: 12px;
+            gap: 8px;
+            margin-bottom: 6px;
         }
 
         .result-title-section {
@@ -334,85 +389,94 @@
         }
 
         .result-title {
-            font-size: 18px;
+            font-size: 15px;
             font-weight: 700;
             color: var(--text-primary);
-            margin-bottom: 4px;
-            line-height: 1.4;
+            margin-bottom: 3px;
+            line-height: 1.25;
+            letter-spacing: -0.01em;
         }
 
         .result-page-name {
             color: var(--accent-blue);
-            font-size: 13px;
+            font-size: 10px;
             font-weight: 500;
+            font-family: 'IBM Plex Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
 
         .result-badges {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
         }
 
         .badge {
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-size: 11px;
+            padding: 4px 7px;
+            border-radius: 6px;
+            font-size: 10px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.08em;
             white-space: nowrap;
+            font-family: 'IBM Plex Mono', monospace;
+            border: 1px solid transparent;
         }
 
         .badge-score {
-            background: rgba(59, 130, 246, 0.2);
+            background: rgba(79, 209, 197, 0.14);
             color: var(--accent-blue);
+            border-color: rgba(79, 209, 197, 0.2);
         }
 
         .badge-match {
-            background: rgba(16, 185, 129, 0.2);
+            background: rgba(34, 197, 94, 0.14);
             color: var(--accent-green);
+            border-color: rgba(34, 197, 94, 0.2);
         }
         
         .badge-context-boost {
-            background: rgba(124, 58, 237, 0.2);
-            color: var(--accent-purple);
-            border: 1px solid rgba(124, 58, 237, 0.3);
+            background: rgba(245, 158, 11, 0.16);
+            color: var(--accent-amber);
+            border: 1px solid rgba(245, 158, 11, 0.25);
             animation: contextPulse 2s infinite;
         }
         
         @keyframes contextPulse {
-            0%, 100% { box-shadow: 0 0 0 rgba(124, 58, 237, 0.4); }
-            50% { box-shadow: 0 0 8px rgba(124, 58, 237, 0.6); }
+            0%, 100% { box-shadow: 0 0 0 rgba(245, 158, 11, 0.3); }
+            50% { box-shadow: 0 0 8px rgba(245, 158, 11, 0.5); }
         }
 
         .result-source {
             color: var(--text-secondary);
-            font-size: 13px;
-            margin-bottom: 8px;
+            font-size: 11px;
+            margin-bottom: 4px;
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
         .result-snippet {
-            background: var(--bg-primary);
-            border-left: 3px solid var(--accent-blue);
-            padding: 12px 16px;
-            margin: 16px 0;
+            background: rgba(3, 9, 14, 0.55);
+            border-left: 2px solid var(--accent-blue);
+            padding: 8px 10px;
+            margin: 10px 0;
             color: var(--text-secondary);
-            font-size: 14px;
-            line-height: 1.6;
-            border-radius: 0 4px 4px 0;
+            font-size: 12px;
+            line-height: 1.45;
+            border-radius: 0 8px 8px 0;
         }
 
         .result-link {
-            color: var(--accent-blue);
+            color: var(--text-secondary);
             text-decoration: none;
-            font-size: 13px;
+            font-size: 11px;
             word-break: break-all;
             display: block;
-            margin-bottom: 12px;
-            opacity: 0.8;
+            margin-bottom: 8px;
+            opacity: 0.9;
+            font-family: 'IBM Plex Mono', monospace;
         }
 
         .result-link:hover {
@@ -420,24 +484,31 @@
             text-decoration: underline;
         }
 
+        .result-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
         .open-btn {
             display: inline-block;
             background: var(--accent-blue);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 4px;
+            color: #081116;
+            padding: 7px 10px;
+            border-radius: 7px;
             text-decoration: none;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 600;
             transition: all 0.2s;
-            border: none;
+            border: 1px solid transparent;
             cursor: pointer;
         }
 
         .open-btn:hover {
             background: var(--accent-blue-hover);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transform: none;
+            box-shadow: none;
         }
 
         /* No Results */
@@ -522,16 +593,16 @@
         .sources-section {
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 20px;
-            margin-top: 48px;
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 12px;
         }
 
         .sources-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             cursor: pointer;
             user-select: none;
         }
@@ -542,7 +613,7 @@
 
         .collapse-arrow {
             color: var(--text-secondary);
-            font-size: 14px;
+            font-size: 12px;
             transition: transform 0.3s ease;
         }
 
@@ -552,26 +623,28 @@
 
         .sources-title {
             color: var(--text-primary);
-            font-size: 20px;
+            font-size: 15px;
             font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .sources-count {
-            background: var(--accent-blue);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
+            background: rgba(79, 209, 197, 0.14);
+            color: var(--accent-blue);
+            padding: 4px 7px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            border: 1px solid rgba(79, 209, 197, 0.2);
+            font-family: 'IBM Plex Mono', monospace;
         }
 
         .sources-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 14px;
+            gap: 8px;
             max-height: 1000px;
             overflow: hidden;
             transition: max-height 0.3s ease, opacity 0.3s ease;
@@ -584,16 +657,16 @@
         }
 
         .source-card {
-            background: var(--bg-primary);
+            background: var(--bg-elevated);
             border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 20px;
+            border-radius: 10px;
+            padding: 12px;
             transition: all 0.2s;
             position: relative;
         }
 
         .source-card:hover {
-            border-color: var(--accent-blue);
+            border-color: var(--border-strong);
         }
 
         .source-card.disabled {
@@ -604,12 +677,12 @@
 
         .source-toggle {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 48px;
-            height: 24px;
+            top: 8px;
+            right: 8px;
+            width: 40px;
+            height: 20px;
             background: var(--border-color);
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             transition: background 0.2s;
         }
@@ -617,10 +690,10 @@
         .source-toggle::before {
             content: '';
             position: absolute;
-            width: 16px;
-            height: 16px;
+            width: 12px;
+            height: 12px;
             background: var(--text-secondary);
-            border-radius: 2px;
+            border-radius: 4px;
             top: 4px;
             left: 4px;
             transition: transform 0.2s, background 0.2s;
@@ -631,39 +704,42 @@
         }
 
         .source-toggle.active::before {
-            transform: translateX(24px);
+            transform: translateX(20px);
             background: white;
         }
 
         .source-name {
             color: var(--text-primary);
             font-weight: 700;
-            font-size: 16px;
-            margin-bottom: 4px;
+            font-size: 14px;
+            margin-bottom: 3px;
         }
 
         .source-type {
             display: inline-block;
             background: var(--bg-tertiary);
             color: var(--accent-blue);
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 11px;
+            padding: 4px 7px;
+            border-radius: 6px;
+            font-size: 10px;
             font-weight: 700;
             text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-family: 'IBM Plex Mono', monospace;
             margin-left: 8px;
         }
 
         .source-desc {
             color: var(--text-secondary);
-            font-size: 13px;
-            margin-top: 8px;
+            font-size: 11px;
+            margin-top: 6px;
         }
 
         .source-pages {
             color: var(--text-secondary);
-            font-size: 13px;
-            margin-top: 12px;
+            font-size: 11px;
+            margin-top: 8px;
+            font-family: 'IBM Plex Mono', monospace;
         }
 
         /* Keyboard hint */
@@ -925,9 +1001,23 @@
                 padding: 16px;
             }
 
+            .header,
+            .search-section,
+            .sources-section {
+                padding: 18px;
+                border-radius: 20px;
+            }
+
             .header {
                 flex-direction: column;
                 gap: 20px;
+                align-items: flex-start;
+            }
+
+            .search-section-header,
+            .filters,
+            .results-stats {
+                flex-direction: column;
                 align-items: flex-start;
             }
 
@@ -939,6 +1029,12 @@
                 flex-direction: column;
             }
 
+            .result-topline,
+            .result-actions {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
             .tips-grid {
                 grid-template-columns: 1fr;
             }
@@ -948,29 +1044,27 @@
 
 <body>
     <div class="container">
-        <!-- Header with Logo -->
         <div class="header">
-            <div class="logo">
-                <div class="logo-icon">📖</div>
-                <div class="logo-text">
-                    <h1>ENGRAM</h1>
-                    <p>Knowledge base indexer</p>
-                </div>
+            <div class="logo-icon">E</div>
+            <div class="logo-text">
+                <h1>ENGRAM</h1>
+                <p>Indexed Search Surface</p>
             </div>
-            <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
-                <span id="themeIcon">☀️</span>
-                <span class="theme-toggle-text" id="themeText">Light</span>
-            </button>
         </div>
 
-        <!-- Search Section -->
         <div class="search-section">
+            <div class="search-section-header">
+                <div class="panel-kicker">Search Console</div>
+                <div class="search-panel-title">Search local notes and indexed documentation</div>
+                <div class="search-panel-copy">
+                    Fuzzy matching, source filtering, and local preview in one compact view.
+                </div>
+            </div>
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="🔍 Search for anything..." autocomplete="off">
-                <div class="search-hint">💡 Tips: Try misspellings - fuzzy search will still find it!</div>
+                <input type="text" id="searchInput" placeholder="Search commands, notes, services, docs..." autocomplete="off">
+                <div class="search-hint" id="searchHint">Balanced mode. Exact and normalized matches rank highest, fuzzy catches drift and typos.</div>
             </div>
 
-            <!-- Filters -->
             <div class="filters">
                 <div class="filter-group">
                     <span class="filter-label">Fuzzy:</span>
@@ -1068,7 +1162,7 @@
         <div class="sources-section" id="sourcesSection">
             <div class="sources-header" onclick="toggleSources()">
                 <div class="sources-title">
-                    📚 Indexed Sources
+                    Source Matrix
                     <span class="sources-count" id="sourcesCount">Loading...</span>
                 </div>
                 <div class="collapse-arrow" id="collapseArrow">▼</div>
@@ -1130,30 +1224,6 @@
             JSON.parse(localStorage.getItem('disabledSources') || '[]')
         );
 
-        // ── Theme ──────────────────────────────────────────────
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        applyTheme(savedTheme);
-
-        function applyTheme(theme) {
-            if (theme === 'light') {
-                document.documentElement.setAttribute('data-theme', 'light');
-                document.getElementById('themeIcon').textContent = '🌙';
-                document.getElementById('themeText').textContent = 'Dark';
-            } else {
-                document.documentElement.removeAttribute('data-theme');
-                document.getElementById('themeIcon').textContent = '☀️';
-                document.getElementById('themeText').textContent = 'Light';
-            }
-        }
-
-        function toggleTheme() {
-            const current = localStorage.getItem('theme') || 'dark';
-            const next = current === 'dark' ? 'light' : 'dark';
-            localStorage.setItem('theme', next);
-            applyTheme(next);
-        }
-        // ── End Theme ──────────────────────────────────────────
-
         const savedFuzzyMode = localStorage.getItem('fuzzyMode');
         if (savedFuzzyMode) {
             fuzzyMode = savedFuzzyMode;
@@ -1172,11 +1242,11 @@
             const hint = document.getElementById('searchHint');
             if (!hint) return;
             if (fuzzyMode === 'off') {
-                hint.textContent = '🎯 Exact search only - results must match precisely';
+                hint.textContent = 'Exact mode. Results must match directly, useful when you already know the term or command.';
             } else if (fuzzyMode === 'normal') {
-                hint.textContent = '💡 Fuzzy search active - exact matches rank higher';
+                hint.textContent = 'Balanced mode. Exact and normalized matches rank highest, fuzzy still catches drift and typos.';
             } else if (fuzzyMode === 'prefer') {
-                hint.textContent = '🔍 Fuzzy search preferred - finds approximate matches first';
+                hint.textContent = 'Aggressive mode. Fuzzy matches are favored for exploratory hunting and half-remembered queries.';
             }
         }
 
@@ -1318,7 +1388,7 @@
                 searchInput.value = '';
                 resultsDiv.innerHTML = '';
                 resultsInfo.style.display = 'none';
-                tipsDiv.style.display = 'block';
+                if (tipsDiv) tipsDiv.style.display = 'block';
                 sourcesSection.style.display = 'block';
                 allSearchResults = [];
                 selectedResultIndex = -1;
@@ -1345,21 +1415,24 @@
 
         async function loadSources() {
             try {
-                const response = await fetch('/api/sources');
-                const data = await response.json();
-                const cacheResponse = await fetch('/api/cache-status');
+                const [sourcesResponse, cacheResponse] = await Promise.all([
+                    fetch('/api/sources'),
+                    fetch('/api/cache-status')
+                ]);
+                const data = await sourcesResponse.json();
                 const cacheData = await cacheResponse.json();
                 const cacheMap = {};
                 if (cacheData.sources) {
                     cacheData.sources.forEach(s => { cacheMap[s.source_id] = s; });
                 }
+
                 if (data.sources && data.sources.length > 0) {
                     sourcesCount.textContent = `${data.total} sources`;
                     sourcesGrid.innerHTML = data.sources.map(source => {
                         const isDisabled = disabledSources.has(source.id);
                         const cacheInfo = cacheMap[source.id];
                         const cacheBadge = cacheInfo
-                            ? `<span class="cache-badge" style="background: #1f6feb; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">Cached</span>`
+                            ? `<span class="badge badge-score">Cached</span>`
                             : '';
                         return `
                             <div class="source-card ${isDisabled ? 'disabled' : ''}" id="source-card-${source.id}">
@@ -1397,13 +1470,13 @@
             if (query.length === 0) {
                 resultsDiv.innerHTML = '';
                 resultsInfo.style.display = 'none';
-                tipsDiv.style.display = 'block';
+                if (tipsDiv) tipsDiv.style.display = 'block';
                 sourcesSection.style.display = 'block';
                 allSearchResults = [];
                 document.getElementById('keyboardHint').classList.remove('visible');
                 return;
             }
-            tipsDiv.style.display = 'none';
+            if (tipsDiv) tipsDiv.style.display = 'none';
             searchTimeout = setTimeout(() => { performSearch(query); }, 400);
         });
 
@@ -1477,8 +1550,8 @@
                 const isLocal = result.url && result.url.startsWith('file://');
                 const isCached = result.is_cached === true || result.cache_hash;
                 let badge = '';
-                if (isLocal) badge = '<span class="badge" style="background: var(--accent-purple);">📁 Local</span>';
-                else if (isCached) badge = '<span class="badge" style="background: var(--accent-green);">📱 Cached</span>';
+                if (isLocal) badge = '<span class="badge badge-score">Local</span>';
+                else if (isCached) badge = '<span class="badge badge-match">Cached</span>';
 
                 let openButton;
                 if (isLocal) {
@@ -1486,7 +1559,7 @@
                 } else if (isCached) {
                     openButton = `
                         <button class="open-btn" onclick="openCachedPage('${escapeHtml(result.source_id)}', '${escapeHtml(result.url)}', '${escapeHtml(result.title)}')">📱 Offline Preview</button>
-                        <a href="${result.url}" class="open-btn" style="background: var(--bg-tertiary); margin-left: 8px;" target="_blank">🌐 Online</a>`;
+                        <a href="${result.url}" class="open-btn" style="background: var(--bg-tertiary); color: var(--text-primary); border-color: var(--border-color);" target="_blank">🌐 Online</a>`;
                 } else {
                     openButton = `<a href="${result.url}" class="open-btn" target="_blank">Open page →</a>`;
                 }
@@ -1502,10 +1575,14 @@
 
                 return `
                 <div class="result-item">
+                    <div class="result-topline">
+                        <span>${escapeHtml(result.source_name)}</span>
+                        <span class="result-kind">${isLocal ? 'LOCAL NOTE' : (isCached ? 'CACHED PAGE' : 'REMOTE PAGE')}</span>
+                    </div>
                     <div class="result-header">
                         <div class="result-title-section">
                             <div class="result-title">${escapeHtml(result.title)}</div>
-                            <div class="result-page-name">📄 ${escapeHtml(result.page_name)}</div>
+                            <div class="result-page-name">${escapeHtml(result.page_name)}</div>
                         </div>
                         <div class="result-badges">
                             ${badge}
@@ -1519,7 +1596,7 @@
                         ? `<div class="result-link" style="color: var(--text-secondary); cursor: default;">📁 ${escapeHtml(result.file_path || result.url.replace('file://', ''))}</div>`
                         : `<a href="${result.url}" class="result-link" target="_blank">${result.url}</a>`
                     }
-                    ${openButton}
+                    <div class="result-actions">${openButton}</div>
                 </div>`;
             }).join('');
         }
@@ -1531,6 +1608,9 @@
                 'page_name': '📄 Pagename',
                 'url': '🔗 URL',
                 'content': '📝 Content',
+                'content_phrase': '⌁ Phrase',
+                'content_normalized': '⌁ Normalized',
+                'all_terms': 'Σ Terms',
                 'fuzzy': '🔍 Fuzzy'
             };
             return types[type] || type;
@@ -1546,7 +1626,7 @@
         });
         loadSources();
         searchInput.addEventListener('focus', () => {
-            if (!searchInput.value) tipsDiv.style.display = 'block';
+            if (!searchInput.value && tipsDiv) tipsDiv.style.display = 'block';
         });
     </script>
 </body>
