@@ -29,6 +29,7 @@ class ContentIndexer {
         this.synonymsPath = path.join(__dirname, 'synonyms.json');
         this.index = { pages: [], last_updated: null, sources: [] };
         this.synonyms = {};
+        this.synonymIndex = new Map();
     }
 
     async initialize() {
@@ -50,10 +51,12 @@ class ContentIndexer {
         try {
             const synonymsData = await fs.readFile(this.synonymsPath, 'utf-8');
             this.synonyms = JSON.parse(synonymsData);
+            this.buildSynonymIndex();
             console.log(`✅ Loaded ${Object.keys(this.synonyms).length} synonym groups`);
         } catch (err) {
             console.log('ℹ️  No synonyms.json found - query expansion disabled');
             this.synonyms = {};
+            this.synonymIndex = new Map();
         }
     }
 
@@ -370,6 +373,29 @@ class ContentIndexer {
         if (!text || !term) return 0;
         const safeRe = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         return (text.match(new RegExp(safeRe, 'g')) || []).length;
+    }
+
+    buildSynonymIndex() {
+        this.synonymIndex = new Map();
+
+        for (const [key, synonymArray] of Object.entries(this.synonyms || {})) {
+            const groupTerms = new Set();
+            [key, ...(synonymArray || [])].forEach(term => {
+                const normalized = this.normalizeForSearch(term);
+                if (normalized) groupTerms.add(normalized);
+            });
+
+            const groupList = [...groupTerms];
+            groupList.forEach(term => {
+                if (!this.synonymIndex.has(term)) {
+                    this.synonymIndex.set(term, new Set());
+                }
+                const existing = this.synonymIndex.get(term);
+                groupList.forEach(related => {
+                    if (related !== term) existing.add(related);
+                });
+            });
+        }
     }
 
     buildSnippet(page, primaryQuery, allTerms) {
@@ -753,17 +779,26 @@ class ContentIndexer {
     }
 
     expandQuery(query) {
-        if (!this.synonyms || Object.keys(this.synonyms).length === 0) return query;
-        const terms = query.toLowerCase().split(/\s+/);
+        if (!this.synonymIndex || this.synonymIndex.size === 0) return query;
+        const normalizedQuery = this.normalizeForSearch(query);
+        const terms = this.tokenizeSearchTerms(query);
         const expanded = new Set();
-        terms.forEach(term => {
-            expanded.add(term);
-            Object.entries(this.synonyms).forEach(([key, synonymArray]) => {
-                if (key === term || synonymArray.includes(term)) {
-                    synonymArray.forEach(syn => expanded.add(syn));
-                }
-            });
-        });
+
+        if (normalizedQuery) expanded.add(normalizedQuery);
+        terms.forEach(term => expanded.add(term));
+
+        for (const [phrase, relatedTerms] of this.synonymIndex.entries()) {
+            const phraseMatched = normalizedQuery === phrase ||
+                normalizedQuery.includes(` ${phrase} `) ||
+                normalizedQuery.startsWith(`${phrase} `) ||
+                normalizedQuery.endsWith(` ${phrase}`);
+
+            if (phraseMatched || terms.includes(phrase)) {
+                expanded.add(phrase);
+                relatedTerms.forEach(term => expanded.add(term));
+            }
+        }
+
         return [...expanded].join(' ');
     }
 
