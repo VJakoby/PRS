@@ -1,8 +1,8 @@
-name: engram-indexed-search-surface
+name: engram
 services:
   engram:
     build: .
-    container_name: engram-indexed-search-surface
+    container_name: engram
     ports:
       - "127.0.0.1:3002:3002"    # accessible from host
     networks:
