@@ -1,6 +1,6 @@
 {
   "index_settings": {
-    "default_ttl_days": 14
+    "default_ttl_days": 14,
     "auto_refresh": false,
     "refresh_interval_hours": 24,
     "max_pages_per_source": 50,
@@ -9,19 +9,41 @@
   },
   "offline_sources": [
     {
-      "id": "local-notes",
-      "name": "Local Notes",
+      "id": "local-notes-primary",
+      "name": "Local Notes - Primary",
       "type": "markdown",
-      "path": "./change/to/localnote/dir",
+      "path": "/app/notes",
+      "file_extensions": [
+        ".md",
+        ".markdown"
+      ],
+      "enabled": true,
+      "description": "Primary local notes directory mounted from NOTES_PATH"
+    },
+    {
+      "id": "local-notes-secondary",
+      "name": "Local Notes - Secondary",
+      "type": "markdown",
+      "path": "/app/notes-2",
       "file_extensions": [
         ".md",
         ".markdown"
       ],
       "enabled": false,
-      "description": "Personal pentest notes in markdown format"
+      "description": "Optional second local notes directory mounted from NOTES_PATH_2"
+    },
+    {
+      "id": "local-notes-tertiary",
+      "name": "Local Notes - Tertiary",
+      "type": "markdown",
+      "path": "/app/notes-3",
+      "file_extensions": [
+        ".md",
+        ".markdown"
+      ],
+      "enabled": false,
+      "description": "Optional third local notes directory mounted from NOTES_PATH_3"
     }
-    ...
-    ...
   ],
   "online_sources": [
     {
@@ -30,12 +52,10 @@
       "type": "markdown",
       "enabled": true,
       "cache_offline": false,
-      "description": "EXAMPLE Raw markdown files from GitHub",
+      "description": "Example raw markdown file from GitHub",
       "urls": [
-        "https://github.com/yogsec/SQL-Injection-Payloads/blob/main/README.md"
+        "https://raw.githubusercontent.com/yogsec/SQL-Injection-Payloads/main/README.md"
       ]
-    },
-    ...
-    ...
-  ],
+    }
+  ]
 }
