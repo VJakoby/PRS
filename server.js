@@ -180,6 +180,27 @@ async function getLocalSourceRoots() {
     return [...roots];
 }
 
+async function getLocalSourceConfigs() {
+    const sources = await indexer.loadSources();
+    const envRootMap = {
+        '/app/notes': process.env.NOTES_PATH,
+        '/app/notes-2': process.env.NOTES_PATH_2,
+        '/app/notes-3': process.env.NOTES_PATH_3
+    };
+
+    return (sources.offline || []).map(source => ({
+        ...source,
+        resolved_path: normalizePathForCompare(indexer.resolvePath(source.path)),
+        approved_roots: [
+            normalizePathForCompare(indexer.resolvePath(source.path)),
+            envRootMap[normalizePathForCompare(indexer.resolvePath(source.path))]
+                ? normalizePathForCompare(envRootMap[normalizePathForCompare(indexer.resolvePath(source.path))])
+                : null
+        ].filter(Boolean),
+        file_extensions: (source.file_extensions || ['.md']).map(ext => ext.toLowerCase())
+    }));
+}
+
 function buildPathVariants(filePath, roots) {
     const variants = new Set();
     const normalizedFile = normalizePathForCompare(filePath);
@@ -216,6 +237,57 @@ async function findReadablePath(candidatePaths) {
     return null;
 }
 
+function isPathInsideRoot(filePath, rootPath) {
+    const normalizedFile = normalizePathForCompare(filePath);
+    const normalizedRoot = normalizePathForCompare(rootPath).replace(/\/$/, '');
+    return normalizedFile === normalizedRoot || normalizedFile.startsWith(`${normalizedRoot}/`);
+}
+
+function isAllowedExtension(filePath, source) {
+    const ext = path.extname(filePath).toLowerCase();
+    return (source.file_extensions || ['.md']).includes(ext);
+}
+
+async function resolveApprovedLocalPath(candidatePaths, localSources) {
+    const uniqueCandidates = [...new Set(candidatePaths.map(candidate => normalizePathForCompare(candidate)))];
+
+    for (const candidate of uniqueCandidates) {
+        try {
+            const realCandidate = normalizePathForCompare(await fs.realpath(candidate));
+            const matchingSource = localSources.find(source =>
+                source.approved_roots.some(root => isPathInsideRoot(realCandidate, root)) &&
+                isAllowedExtension(realCandidate, source)
+            );
+
+            if (!matchingSource) {
+                continue;
+            }
+
+            const trustedRootMatched = await Promise.all(
+                matchingSource.approved_roots.map(async root => {
+                    try {
+                        const realRoot = normalizePathForCompare(await fs.realpath(root));
+                        return isPathInsideRoot(realCandidate, realRoot);
+                    } catch (error) {
+                        return false;
+                    }
+                })
+            );
+
+            if (!trustedRootMatched.some(Boolean)) {
+                continue;
+            }
+
+            return {
+                resolved_path: realCandidate,
+                source: matchingSource
+            };
+        } catch (error) {}
+    }
+
+    return null;
+}
+
 // API: Preview local markdown file
 app.get('/api/preview', async (req, res) => {
     const { file } = req.query;
@@ -225,6 +297,7 @@ app.get('/api/preview', async (req, res) => {
     }
     
     try {
+        const localSources = await getLocalSourceConfigs();
         const localRoots = await getLocalSourceRoots();
         const page = findIndexedLocalPage(file, localRoots);
         if (!page) {
@@ -233,19 +306,19 @@ app.get('/api/preview', async (req, res) => {
 
         const requestedCandidates = buildPathVariants(file, localRoots);
         const indexedCandidates = buildPathVariants(page.file_path, localRoots);
-        const resolvedPath = await findReadablePath([
+        const approvedPath = await resolveApprovedLocalPath([
             ...requestedCandidates,
             ...indexedCandidates
-        ]);
+        ], localSources);
 
-        if (!resolvedPath) {
-            return res.status(404).json({
-                error: 'File exists in index but is not readable from this runtime',
+        if (!approvedPath) {
+            return res.status(403).json({
+                error: 'File is outside approved local note roots or has a disallowed extension',
                 file_path: page.file_path
             });
         }
 
-        const content = await fs.readFile(resolvedPath, 'utf-8');
+        const content = await fs.readFile(approvedPath.resolved_path, 'utf-8');
         const html = convertMarkdownToHTML(content);
         
         res.json({
@@ -254,7 +327,7 @@ app.get('/api/preview', async (req, res) => {
             html: html,
             raw: content,
             file_path: page.file_path,
-            resolved_path: resolvedPath
+            resolved_path: approvedPath.resolved_path
         });
     } catch (error) {
         console.error('Preview error:', error);
