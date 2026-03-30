@@ -1,26 +1,50 @@
 {
-    "ssh": ["secure shell", "22/tcp", "ssh service"],
-    "smb": ["server message block", "445/tcp", "cifs", "windows file sharing"],
+    "ssh": {
+        "aliases": ["secure shell", "22/tcp", "ssh service"],
+        "related": []
+    },
+    "smb": {
+        "aliases": ["server message block", "445/tcp", "cifs"],
+        "related": ["windows file sharing"]
+    },
     "rdp": ["remote desktop", "3389/tcp", "terminal services", "mstsc"],
     "ftp": ["file transfer protocol", "21/tcp", "ftp service"],
     "tftp": ["trivial ftp", "69/udp", "tftp service"],
-    "http": ["80/tcp", "web service"],
-    "https": ["443/tcp", "tls web", "secure http"],
+    "http": {
+        "aliases": ["80/tcp"],
+        "related": ["web service"]
+    },
+    "https": {
+        "aliases": ["443/tcp", "secure http"],
+        "related": ["tls web"]
+    },
     "dns": ["53/tcp", "53/udp", "domain name system"],
     "smtp": ["25/tcp", "mail server", "email relay"],
     "pop3": ["110/tcp", "mail retrieval"],
     "imap": ["143/tcp", "mail access"],
     "ldap": ["389/tcp", "directory service"],
     "ldaps": ["636/tcp", "secure ldap"],
-    "kerberos": ["88/tcp", "88/udp", "kerberos auth"],
+    "kerberos": {
+        "aliases": ["88/tcp", "88/udp"],
+        "related": ["kerberos auth"]
+    },
     "mssql": ["1433/tcp", "sql server", "microsoft sql"],
     "mysql": ["3306/tcp", "mysql service"],
     "postgres": ["5432/tcp", "postgresql"],
     "vnc": ["5900/tcp", "vnc service", "remote framebuffer"],
-    "winrm": ["5985/tcp", "5986/tcp", "windows remote management"],
+    "winrm": {
+        "aliases": ["5985/tcp", "5986/tcp", "windows remote management"],
+        "related": ["evil-winrm"]
+    },
   
-    "sqli": ["sql injection", "boolean sqli", "time-based sqli", "error-based sqli"],
-    "xss": ["cross-site scripting", "stored xss", "reflected xss", "dom xss"],
+    "sqli": {
+        "aliases": ["sql injection"],
+        "related": ["boolean sqli", "time-based sqli", "error-based sqli"]
+    },
+    "xss": {
+        "aliases": ["cross-site scripting"],
+        "related": ["stored xss", "reflected xss", "dom xss"]
+    },
     "rce": ["remote code execution", "code exec"],
     "lfi": ["local file inclusion"],
     "rfi": ["remote file inclusion"],
@@ -33,7 +57,10 @@
     "path_traversal": ["directory traversal", "dot dot slash"],
     "file_upload": ["unrestricted file upload", "arbitrary file upload"],
   
-    "nmap": ["-sc", "-sv", "-p-", "service detection"],
+    "nmap": {
+        "aliases": ["-sc", "-sv", "-p-"],
+        "related": ["service detection"]
+    },
     "rustscan": ["fast port scanner"],
     "masscan": ["high speed port scan"],
     "metasploit": ["msf", "exploit framework", "msfconsole"],
@@ -47,7 +74,10 @@
     "hydra": ["password brute force", "login brute"],
     "john": ["john the ripper", "password cracking", "pdf2john", "2john"],
     "hashcat": ["gpu cracking", "hash cracking"],
-    "impacket": ["psexec", "wmiexec", "smbexec", "secretsdump"],
+    "impacket": {
+        "aliases": [],
+        "related": ["psexec", "wmiexec", "smbexec", "secretsdump"]
+    },
     "bloodhound": ["ad mapping", "graph ad"],
     "sharphound": ["ad mapping", "graph ad"],
     "crackmapexec": ["cme", "smb spray", "winrm spray"],
@@ -135,7 +165,10 @@
     "port_11211": ["memcached"],
     "port_27017": ["mongodb"],
   
-    "ad": ["active directory", "domain environment"],
+    "ad": {
+        "aliases": ["active directory"],
+        "related": ["domain environment"]
+    },
     "dc": ["domain controller"],
     "kerberoast": ["service ticket roast"],
     "asreproast": ["as-rep roast"],
