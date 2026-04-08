@@ -1,7 +1,11 @@
 {
   "name": "engram-indexed-search-surface",
   "version": "1.0.0",
-  "description": "Indexed Search Surface",
+  "description": "ENGRAM - Indexed Search Surface",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VJakoby/engram-Indexed-Search-Surface.git"
+  },
   "main": "server.js",
 
   "scripts": {

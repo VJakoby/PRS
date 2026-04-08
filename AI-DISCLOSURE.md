@@ -1,7 +1,7 @@
 # AI Disclosure & Provenance
 
 ### 🏗️ Architectural Ownership
-The **ENGRAM-indexed-search-surface** was conceptualized, architected, and directed by **VJakoby**. 
+The **engram-Indexed-Search-Surface** repository and its user-facing application, **ENGRAM — Indexed Search Surface**, were conceptualized, architected, and directed by **VJakoby**.
 
 The human architect defined and oversaw the following core systems:
 * **The Indexing & Scoring Engine:** The strategy for fuzzy search matching and the hierarchical scoring system for search results.
@@ -10,15 +10,17 @@ The human architect defined and oversaw the following core systems:
 * **Containerization:** The Docker Compose orchestration for a localized, isolated Node.js environment.
 
 ### 🤖 AI Implementation
-This repository was developed through iterative collaboration with **Claude 4.6 Sonnet** (Anthropic).
+This repository was developed through iterative collaboration with AI coding tools, including **Claude 4.6 Sonnet** (Anthropic) and **Codex** (OpenAI).
 
-* **Role:** The AI acted as the primary implementation partner, generating the logic for CLI argument parsing, file system interactions, and HTML scraping via `cheerio` based on human-defined architectural requirements.
-* **Refinement:** All AI-generated outputs underwent multiple rounds of human review. The author manually refactored the request-handling logic to ensure the `RATE` constant was correctly integrated across the asynchronous crawling process.
+* **Role:** These AI systems were used as implementation partners, assisting with logic generation for CLI argument parsing, file system interactions, indexing workflows, and HTML scraping via `cheerio`, based on human-defined architectural requirements.
+* **Refinement:** All AI-generated outputs underwent multiple rounds of human review and revision. Final responsibility for architectural decisions, review, acceptance, and refactoring remained with the human author.
 
 ### ⚖️ Legal Standing & Attribution
-* **Ownership:** The author claims copyright over the **collective work** and the unique **system architecture**. The AI is recognized as a sophisticated development tool used under human direction.
-* **License:** This project is licensed under the **MIT License**.
-* **Dependencies:** Built using Express, Axios, and Cheerio.
+* **Repository & App Name:** This repository is published as **engram-Indexed-Search-Surface**. The user-facing application is presented as **ENGRAM — Indexed Search Surface**.
+* **Function:** ENGRAM is a local knowledge-base and documentation indexing/search tool that aggregates public online documentation and local markdown notes into a unified searchable surface, exposed through both a CLI workflow and a local REST API.
+* **Ownership:** The author claims copyright over the **collective work**, the project structure, and the unique **system architecture**. The AI is recognized as a sophisticated development tool used under human direction.
+* **License:** This project is licensed under the **GPL-3.0 License**, consistent with the repository metadata.
+* **Dependencies:** Built using Express, Axios, Cheerio, Marked, and CORS.
 
 ### 🌐 Note on Data Sources
 - This repository may contain a list of publicly accessible URLs used as reference points for indexing.
