@@ -375,27 +375,225 @@ class ContentIndexer {
         return (text.match(new RegExp(safeRe, 'g')) || []).length;
     }
 
+    countClusteredTermHits(text, terms, windowSize = 12) {
+        const normalizedTerms = [...new Set((terms || [])
+            .map(term => this.normalizeForSearch(term))
+            .filter(Boolean))];
+
+        if (normalizedTerms.length < 2) return 0;
+
+        const words = this.normalizeForSearch(text).split(' ').filter(Boolean);
+        if (words.length === 0) return 0;
+
+        let bestDistinctTerms = 0;
+
+        for (let start = 0; start < words.length; start++) {
+            const seen = new Set();
+            const end = Math.min(words.length, start + windowSize);
+
+            for (let i = start; i < end; i++) {
+                if (normalizedTerms.includes(words[i])) {
+                    seen.add(words[i]);
+                }
+            }
+
+            if (seen.size > bestDistinctTerms) {
+                bestDistinctTerms = seen.size;
+            }
+
+            if (bestDistinctTerms === normalizedTerms.length) {
+                break;
+            }
+        }
+
+        return bestDistinctTerms;
+    }
+
+    extractTechnicalQueryTerms(query) {
+        const stopwords = new Set([
+            'about', 'after', 'against', 'along', 'also', 'and', 'from', 'have', 'into',
+            'local', 'notes', 'show', 'that', 'them', 'then', 'they', 'this', 'with', 'your'
+        ]);
+
+        const rawTokens = (query || '')
+            .toLowerCase()
+            .split(/\s+/)
+            .map(token => token.trim().replace(/^[`"'([{<]+|[`"',.:;)\]}>]+$/g, ''))
+            .filter(Boolean);
+
+        const technicalTerms = [];
+        const seen = new Set();
+
+        for (const token of rawTokens) {
+            const normalized = this.normalizeForSearch(token);
+            const isFlag = /^-{1,2}[a-z0-9][a-z0-9-]*$/i.test(token);
+            const hasTechnicalShape =
+                isFlag ||
+                token.includes('/') ||
+                token.includes('_') ||
+                token.includes('.') ||
+                /\d/.test(token) ||
+                this.synonymIndex.has(normalized) ||
+                (normalized.length >= 3 && !stopwords.has(normalized));
+
+            if (!hasTechnicalShape) continue;
+
+            const dedupeKey = normalized || token;
+            if (seen.has(dedupeKey)) continue;
+            seen.add(dedupeKey);
+
+            technicalTerms.push({ raw: token, normalized, isFlag });
+        }
+
+        return technicalTerms;
+    }
+
+    lineContainsNormalizedTerm(normalizedLine, normalizedTerm) {
+        if (!normalizedLine || !normalizedTerm) return false;
+        return ` ${normalizedLine} `.includes(` ${normalizedTerm} `);
+    }
+
+    analyzeCommandLikeLines(text, technicalTerms) {
+        const lines = (text || '')
+            .split('\n')
+            .map(line => line.trim())
+            .filter(Boolean);
+
+        let bestDistinctTerms = 0;
+        let bestFlagHits = 0;
+        let commandLikeLineHits = 0;
+
+        for (const line of lines) {
+            const rawLine = line.toLowerCase();
+            const normalizedLine = this.normalizeForSearch(line);
+            const matchedTerms = new Set();
+            let flagHits = 0;
+
+            for (const term of technicalTerms) {
+                if (term.normalized && this.lineContainsNormalizedTerm(normalizedLine, term.normalized)) {
+                    matchedTerms.add(term.normalized);
+                } else if (term.raw && rawLine.includes(term.raw)) {
+                    matchedTerms.add(term.raw);
+                }
+
+                if (term.isFlag && term.raw && rawLine.includes(term.raw)) {
+                    flagHits++;
+                }
+            }
+
+            if (matchedTerms.size < 2) continue;
+
+            const looksCommandLike =
+                /(^|[\s`])-{1,2}[a-z0-9]/.test(rawLine) ||
+                /\b[a-z0-9._-]+\/(tcp|udp)\b/.test(rawLine) ||
+                /\b[a-z0-9._-]+\s+-{1,2}[a-z0-9]/.test(rawLine);
+
+            if (looksCommandLike) {
+                commandLikeLineHits++;
+            }
+
+            if (
+                matchedTerms.size > bestDistinctTerms ||
+                (matchedTerms.size === bestDistinctTerms && flagHits > bestFlagHits)
+            ) {
+                bestDistinctTerms = matchedTerms.size;
+                bestFlagHits = flagHits;
+            }
+        }
+
+        return { bestDistinctTerms, bestFlagHits, commandLikeLineHits };
+    }
+
+    addWeightedTerm(termMap, term, weight) {
+        const normalized = this.normalizeForSearch(term);
+        if (!normalized) return;
+        const currentWeight = termMap.get(normalized) || 0;
+        if (weight > currentWeight) {
+            termMap.set(normalized, weight);
+        }
+    }
+
+    getOrCreateSynonymBucket(term) {
+        if (!this.synonymIndex.has(term)) {
+            this.synonymIndex.set(term, {
+                aliases: new Set(),
+                related: new Set(),
+                maps_to: new Set()
+            });
+        }
+        return this.synonymIndex.get(term);
+    }
+
+    addSynonymRelation(from, to, relation, bidirectional = true) {
+        const normalizedFrom = this.normalizeForSearch(from);
+        const normalizedTo = this.normalizeForSearch(to);
+        if (!normalizedFrom || !normalizedTo || normalizedFrom === normalizedTo) return;
+
+        const fromBucket = this.getOrCreateSynonymBucket(normalizedFrom);
+        fromBucket[relation].add(normalizedTo);
+
+        if (bidirectional) {
+            const toBucket = this.getOrCreateSynonymBucket(normalizedTo);
+            toBucket[relation].add(normalizedFrom);
+        }
+    }
+
     buildSynonymIndex() {
         this.synonymIndex = new Map();
 
-        for (const [key, synonymArray] of Object.entries(this.synonyms || {})) {
-            const groupTerms = new Set();
-            [key, ...(synonymArray || [])].forEach(term => {
-                const normalized = this.normalizeForSearch(term);
-                if (normalized) groupTerms.add(normalized);
-            });
+        for (const [key, synonymEntry] of Object.entries(this.synonyms || {})) {
+            const normalizedKey = this.normalizeForSearch(key);
+            if (!normalizedKey) continue;
 
-            const groupList = [...groupTerms];
-            groupList.forEach(term => {
-                if (!this.synonymIndex.has(term)) {
-                    this.synonymIndex.set(term, new Set());
+            this.getOrCreateSynonymBucket(normalizedKey);
+
+            if (Array.isArray(synonymEntry)) {
+                const aliasTerms = [key, ...synonymEntry];
+                for (let i = 0; i < aliasTerms.length; i++) {
+                    for (let j = i + 1; j < aliasTerms.length; j++) {
+                        this.addSynonymRelation(aliasTerms[i], aliasTerms[j], 'aliases', true);
+                    }
                 }
-                const existing = this.synonymIndex.get(term);
-                groupList.forEach(related => {
-                    if (related !== term) existing.add(related);
-                });
-            });
+                continue;
+            }
+
+            const aliases = synonymEntry.aliases || [];
+            const related = synonymEntry.related || [];
+            const mapsTo = synonymEntry.maps_to || [];
+
+            aliases.forEach(alias => this.addSynonymRelation(key, alias, 'aliases', true));
+            related.forEach(term => this.addSynonymRelation(key, term, 'related', true));
+            mapsTo.forEach(term => this.addSynonymRelation(key, term, 'maps_to', false));
         }
+    }
+
+    expandQueryTerms(query) {
+        if (!this.synonymIndex || this.synonymIndex.size === 0) {
+            return this.tokenizeSearchTerms(query).map(term => ({ term, weight: 1.0 }));
+        }
+
+        const normalizedQuery = this.normalizeForSearch(query);
+        const originalTerms = this.tokenizeSearchTerms(query);
+        const weightedTerms = new Map();
+
+        originalTerms.forEach(term => this.addWeightedTerm(weightedTerms, term, 1.0));
+
+        for (const [phrase, relations] of this.synonymIndex.entries()) {
+            const phraseMatched = normalizedQuery === phrase ||
+                normalizedQuery.includes(` ${phrase} `) ||
+                normalizedQuery.startsWith(`${phrase} `) ||
+                normalizedQuery.endsWith(` ${phrase}`) ||
+                originalTerms.includes(phrase);
+
+            if (!phraseMatched) continue;
+
+            this.addWeightedTerm(weightedTerms, phrase, phrase === normalizedQuery ? 1.0 : 0.85);
+            relations.aliases.forEach(term => this.addWeightedTerm(weightedTerms, term, 0.72));
+            relations.related.forEach(term => this.addWeightedTerm(weightedTerms, term, 0.38));
+            relations.maps_to.forEach(term => this.addWeightedTerm(weightedTerms, term, 0.5));
+        }
+
+        return [...weightedTerms.entries()].map(([term, weight]) => ({ term, weight }));
     }
 
     buildSnippet(page, primaryQuery, allTerms) {
@@ -779,27 +977,7 @@ class ContentIndexer {
     }
 
     expandQuery(query) {
-        if (!this.synonymIndex || this.synonymIndex.size === 0) return query;
-        const normalizedQuery = this.normalizeForSearch(query);
-        const terms = this.tokenizeSearchTerms(query);
-        const expanded = new Set();
-
-        if (normalizedQuery) expanded.add(normalizedQuery);
-        terms.forEach(term => expanded.add(term));
-
-        for (const [phrase, relatedTerms] of this.synonymIndex.entries()) {
-            const phraseMatched = normalizedQuery === phrase ||
-                normalizedQuery.includes(` ${phrase} `) ||
-                normalizedQuery.startsWith(`${phrase} `) ||
-                normalizedQuery.endsWith(` ${phrase}`);
-
-            if (phraseMatched || terms.includes(phrase)) {
-                expanded.add(phrase);
-                relatedTerms.forEach(term => expanded.add(term));
-            }
-        }
-
-        return [...expanded].join(' ');
+        return this.expandQueryTerms(query).map(entry => entry.term).join(' ');
     }
 
     search(query, options = {}) {
@@ -809,13 +987,10 @@ class ContentIndexer {
         const hasContext = context && context.active;
 
         const originalTerm = query.toLowerCase().trim();
-        const expandedStr = this.expandQuery(query).toLowerCase().trim();
+        const expandedTermEntries = this.expandQueryTerms(query);
         const originalTerms = this.tokenizeSearchTerms(query);
-        const expandedTerms = this.tokenizeSearchTerms(expandedStr);
-        const allTerms = [];
-        [originalTerm, ...originalTerms, ...expandedTerms].forEach(term => {
-            if (term && !allTerms.includes(term)) allTerms.push(term);
-        });
+        const technicalQueryTerms = this.extractTechnicalQueryTerms(query);
+        const allTerms = expandedTermEntries.map(entry => entry.term);
         const normalizedQuery = this.normalizeForSearch(query);
 
         const results = [];
@@ -835,6 +1010,34 @@ class ContentIndexer {
             const normalizedContent = this.normalizeForSearch(page.content);
             const localContentWeight = page.is_local ? 1.8 : 1.0;
             let matchedTerms = 0;
+            const hasPhraseIntent = originalTerms.length >= 2 && normalizedQuery.length > 0;
+
+            if (hasPhraseIntent) {
+                if (normalizedTitle === normalizedQuery) {
+                    score += 160;
+                    matchType = matchType || 'exact_phrase_title';
+                } else if (normalizedTitle.includes(normalizedQuery)) {
+                    score += 115;
+                    matchType = matchType || 'title_phrase';
+                }
+
+                if (normalizedPageName.includes(normalizedQuery)) {
+                    score += 80;
+                    matchType = matchType || 'page_phrase';
+                }
+
+                const contentPhraseOccurrences = this.countOccurrences(normalizedContent, normalizedQuery);
+                if (contentPhraseOccurrences > 0) {
+                    score += Math.round(Math.min(contentPhraseOccurrences, 4) * 32 * localContentWeight);
+                    matchType = matchType || 'content_phrase';
+                }
+
+                const clusteredTerms = this.countClusteredTermHits(normalizedContent, originalTerms);
+                if (clusteredTerms >= Math.min(2, originalTerms.length)) {
+                    score += Math.round(clusteredTerms * 14 * localContentWeight);
+                    if (!matchType) matchType = 'content_cluster';
+                }
+            }
 
             if (originalTerm && titleLower === originalTerm) {
                 score += 120;
@@ -863,9 +1066,8 @@ class ContentIndexer {
                 }
             }
 
-            for (let ti = 0; ti < allTerms.length; ti++) {
-                const term   = allTerms[ti];
-                const weight = ti === 0 ? 1.0 : 0.6;
+            for (let ti = 0; ti < expandedTermEntries.length; ti++) {
+                const { term, weight } = expandedTermEntries[ti];
                 let termMatched = false;
 
                 if (titleLower === term) {
@@ -926,6 +1128,21 @@ class ContentIndexer {
                 if (!matchType) matchType = 'all_terms';
             } else if (matchedTerms >= 2) {
                 score += Math.round(15 * localContentWeight);
+            }
+
+            if (page.is_local && technicalQueryTerms.length >= 2) {
+                const commandSignals = this.analyzeCommandLikeLines(page.content, technicalQueryTerms);
+                if (commandSignals.bestDistinctTerms >= Math.min(2, technicalQueryTerms.length)) {
+                    const commandScore =
+                        (commandSignals.bestDistinctTerms * 16) +
+                        (commandSignals.bestFlagHits * 10) +
+                        (commandSignals.commandLikeLineHits > 0 ? 18 : 0);
+
+                    score += Math.round(commandScore * 1.1);
+                    if (!matchType || ['content', 'content_normalized', 'content_cluster', 'all_terms'].includes(matchType)) {
+                        matchType = 'command_cluster';
+                    }
+                }
             }
 
             if (page.is_local && matchedTerms > 0) {
