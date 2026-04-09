@@ -5,6 +5,9 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
+# Ensure latest npm version
+RUN npm install -g npm@latest
+
 # Install production dependencies only
 RUN npm ci --omit=dev --production
 
