@@ -371,4 +371,4 @@ PRAGMA → ENGRAM (localhost:3002) → Search API
 
 ## 📝 License
 
-Created by VJakoby + 🤖 | Licensed under GPL-3.0 | [View AI & Architectural Disclosure](./AI-DISCLOSURE.md)
+Created by VJakoby + 🤖 | Licensed under MIT | [View AI & Architectural Disclosure](./AI-DISCLOSURE.md)

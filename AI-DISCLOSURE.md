@@ -19,7 +19,7 @@ This repository was developed through iterative collaboration with AI coding too
 * **Repository & App Name:** This repository is published as **engram-Indexed-Search-Surface**. The user-facing application is presented as **ENGRAM — Indexed Search Surface**.
 * **Function:** ENGRAM is a local knowledge-base and documentation indexing/search tool that aggregates public online documentation and local markdown notes into a unified searchable surface, exposed through both a CLI workflow and a local REST API.
 * **Ownership:** The author claims copyright over the **collective work**, the project structure, and the unique **system architecture**. The AI is recognized as a sophisticated development tool used under human direction.
-* **License:** This project is licensed under the **GPL-3.0 License**, consistent with the repository metadata.
+* **License:** This project is licensed under the **MIT License**, consistent with the repository metadata.
 * **Dependencies:** Built using Express, Axios, Cheerio, Marked, and CORS.
 
 ### 🌐 Note on Data Sources

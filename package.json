@@ -27,7 +27,7 @@
     "search"
   ],
   "author": "VJakoby + 🤖",
-  "license": "GPL-3.0",
+  "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
     "axios": "^1.6.0",
