@@ -4,7 +4,7 @@
 
 ## Why?
 
-Technical documentation is fragmented between remote public docs and local notes. ENGRAM eliminates the overhead of switching between browser tabs and local editors by providing a single unified search interface, consumed directly by tools like [PRAGMA](https://github.com/VJakoby/pragma).
+Technical documentation is fragmented between remote public docs and local notes. ENGRAM eliminates the overhead of switching between browser tabs and local editors by providing a single unified search interface, directly integrated and used by [PRAGMA](https://github.com/VJakoby/pragma).
 
 ---
 
