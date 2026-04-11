@@ -369,6 +369,12 @@ PRAGMA → ENGRAM (localhost:3002) → Search API
 
 ---
 
+## Contributions
+
+If you discover new ideas, feature proposals, bugs, or other problems, opening an issue is highly appreciated. Pull requests with fixes or improvements are also very welcome.
+
+---
+
 ## 📝 License
 
 Created by VJakoby + 🤖 | Licensed under MIT | [View AI & Architectural Disclosure](./AI-DISCLOSURE.md)
