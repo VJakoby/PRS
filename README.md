@@ -353,7 +353,7 @@ node indexer.js info
 
 ---
 
-## 🤝 Integration with PRAGMA
+##  ⚙️ Integration with PRAGMA
 
 ENGRAM is designed to work seamlessly with [PRAGMA](https://github.com/VJakoby/pragma).
 
@@ -369,7 +369,7 @@ PRAGMA → ENGRAM (localhost:3002) → Search API
 
 ---
 
-## Contributions
+## 🤝 Contributions
 
 If you discover new ideas, feature proposals, bugs, or other problems, opening an issue is highly appreciated. Pull requests with fixes or improvements are also very welcome.
 
