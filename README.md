@@ -58,12 +58,15 @@ Service runs on `http://localhost:3002`.
 ## 🐳 Docker (Alternative)
 
 ```bash
+docker network create pragma-net 2>/dev/null || true
 docker-compose up --build
 ```
 
 ENGRAM will be available at `http://localhost:3002`.
 
 When running alongside PRAGMA in Docker, they communicate over a shared internal network (`http://engram:3002`). See PRAGMA's [DOCKER.md](https://github.com/VJakoby/pragma/blob/main/DOCKER.md) for the combined setup.
+
+> **Shared network note:** The checked-in Compose file expects an external Docker network named `pragma-net`. If PRAGMA has not already created it, run `docker network create pragma-net` once before starting ENGRAM.
 
 ### Local Notes in Docker
 
