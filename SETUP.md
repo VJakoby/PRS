@@ -129,6 +129,11 @@ npm run index -- --force --local
 }
 ```
 
+Docker note:
+
+- Local/native runs can use host paths like `./notes` or `/home/user/notes`
+- Docker runs should use container paths like `/app/notes`, with the real host path set in `.env` as `NOTES_PATH=/home/user/notes`
+
 **Key Settings:**
 - `default_ttl_days` - Days before re-indexing (default: 7)
 - `max_pages_per_source` - Limit pages per source (null = unlimited)
@@ -166,6 +171,8 @@ npm run index -- --force --online
   "path": "/path/to/your/notes"
 }
 ```
+
+If using Docker, do not put the host path in `sources.json`. Use `/app/notes` there instead, and put the real host path in `.env`.
 
 Then run:
 ```bash
