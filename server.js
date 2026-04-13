@@ -18,8 +18,11 @@
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs').promises;
+const syncFs = require('fs');
+const os = require('os');
 const path = require('path');
 const ContentIndexer = require('./indexer');
+const { createBackup } = require('./scripts/backup');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -30,6 +33,7 @@ app.use(express.static('public'));
 
 const indexer = new ContentIndexer();
 let indexReady = false;
+let backupInProgress = false;
 
 async function startServer() {
     try {
@@ -493,6 +497,43 @@ app.post('/api/rebuild-index', async (req, res) => {
     } catch (error) {
         console.error('❌ Error during rebuild:', error);
         indexReady = true;
+    }
+});
+
+// API: Download backup of ./data as a zip
+app.post('/api/backup-index', async (req, res) => {
+    if (backupInProgress) {
+        return res.status(409).json({
+            error: 'Backup already in progress'
+        });
+    }
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const tempBackupPath = path.join(os.tmpdir(), `engram-data-backup-${timestamp}.zip`);
+
+    try {
+        backupInProgress = true;
+        const { bytes } = await createBackup(tempBackupPath);
+        const downloadName = path.basename(tempBackupPath);
+
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader('Content-Length', String(bytes));
+
+        res.download(tempBackupPath, downloadName, (err) => {
+            syncFs.unlink(tempBackupPath, () => {});
+            backupInProgress = false;
+
+            if (err && !res.headersSent) {
+                res.status(500).json({ error: 'Backup download failed' });
+            }
+        });
+    } catch (error) {
+        backupInProgress = false;
+        syncFs.unlink(tempBackupPath, () => {});
+        console.error('Backup error:', error);
+        res.status(500).json({
+            error: 'Backup failed'
+        });
     }
 });
 

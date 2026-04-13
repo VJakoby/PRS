@@ -17,9 +17,19 @@
     "search": "node indexer.js search",
     "update": "node indexer.js update",
     "remove": "node indexer.js remove",
-    "backup": "node node scripts/backup",
+    "backup": "node scripts/backup",
     "restore": "node scripts/restore",
-    "help": "node indexer.js --help"
+    "help": "node indexer.js --help",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:index": "docker compose run --rm engram npm run index",
+    "docker:index:force": "docker compose run --rm engram npm run index -- --force",
+    "docker:index:local": "docker compose run --rm engram npm run index -- --local",
+    "docker:index:online": "docker compose run --rm engram npm run index -- --online",
+    "docker:index:help": "docker compose run --rm engram npm run help",
+    "docker:cache": "docker compose run --rm engram npm run cache",
+    "docker:backup": "docker compose run --rm engram npm run backup",
+    "docker:restore": "docker compose run --rm engram npm run restore"
   },
   "keywords": [
     "knowledge-base",
@@ -29,6 +39,8 @@
   "author": "VJakoby + 🤖",
   "license": "MIT",
   "dependencies": {
+    "adm-zip": "^0.5.16",
+    "archiver": "^7.0.1",
     "express": "^4.18.2",
     "axios": "^1.6.0",
     "cheerio": "^1.0.0-rc.12",

@@ -1369,8 +1369,8 @@ if (require.main === module) {
         console.log('');
         console.log('Backup & Restore:');
         console.log('  npm run backup                          Backup ./data to a timestamped zip');
-        console.log('  npm run restore                         Restore from latest backup in ./data');
-        console.log('  npm run restore -- data/backup-X.zip    Restore from a specific backup file');
+        console.log('  npm run restore                         Restore from latest backup in project root');
+        console.log('  npm run restore -- data.backup-X.zip    Restore from a specific backup file');
         console.log('');
         console.log('Docker Usage:');
         console.log('  docker compose run --rm engram npm run index');
