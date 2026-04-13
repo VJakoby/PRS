@@ -131,6 +131,8 @@ If `NOTES_PATH_2` or `NOTES_PATH_3` are unused, leave them empty and disable the
 | `npm run docker:index:local` | Re-index local sources through Docker |
 | `npm run docker:index:online` | Re-index online sources through Docker |
 | `npm run docker:up` | Start the Docker stack in the background |
+| `npm run backup` | Create a portable zip backup of `./data` |
+| `npm run docker:backup` | Create the same backup through Docker |
 | `node indexer.js info` | View index statistics and source ages |
 | `npm run cache` | Cache online sources locally for offline use |
 | `npm run cache-status` | Show storage usage and cached page statistics |

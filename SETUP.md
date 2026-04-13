@@ -238,12 +238,12 @@ npm run help
 
 ### Backup of index
 ```bash
-npm run backup # Produces ./data/backup-2026-03-17T10-00-00.zip
+npm run backup # Produces ./data.backup-2026-03-17T10-00-00.zip
 ```
 
 ### Restore of index
 ```bash
-npm run restore # Auto-finds the latest zip in /data/
+npm run restore # Auto-finds the latest backup zip in project root
 ```
 ---
 

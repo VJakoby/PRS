@@ -117,6 +117,14 @@
             min-width: 0;
         }
 
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
         .logo-icon {
             width: 34px;
             height: 34px;
@@ -165,6 +173,31 @@
         .theme-toggle:hover {
             border-color: var(--border-strong);
             color: var(--text-primary);
+        }
+
+        .backup-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 7px;
+            background: var(--bg-accent-soft);
+            color: var(--accent-blue);
+            font-size: 10px;
+            font-family: 'IBM Plex Mono', monospace;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .backup-toggle:hover:not(:disabled) {
+            border-color: var(--border-strong);
+            color: var(--text-primary);
+        }
+
+        .backup-toggle:disabled {
+            opacity: 0.7;
+            cursor: wait;
         }
 
         .search-section {
@@ -1040,7 +1073,13 @@
                 width: 100%;
             }
 
-            .theme-toggle {
+            .header-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .theme-toggle,
+            .backup-toggle {
                 align-self: flex-start;
             }
 
@@ -1082,10 +1121,16 @@
                     <p>Indexed Search Surface</p>
                 </div>
             </div>
-            <button class="theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()">
-                <span id="themeIcon">◐</span>
-                <span id="themeLabel">Light</span>
-            </button>
+            <div class="header-actions">
+                <button class="backup-toggle" id="backupButton" type="button" onclick="backupIndex()">
+                    <span id="backupIcon">⬇</span>
+                    <span id="backupLabel">Backup Index</span>
+                </button>
+                <button class="theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()">
+                    <span id="themeIcon">◐</span>
+                    <span id="themeLabel">Light</span>
+                </button>
+            </div>
         </div>
 
         <div class="search-section">
@@ -1249,6 +1294,9 @@
         const collapseArrow = document.getElementById('collapseArrow');
         const themeIcon = document.getElementById('themeIcon');
         const themeLabel = document.getElementById('themeLabel');
+        const backupButton = document.getElementById('backupButton');
+        const backupIcon = document.getElementById('backupIcon');
+        const backupLabel = document.getElementById('backupLabel');
 
         let searchTimeout;
         let sourcesCollapsed = false;
@@ -1281,6 +1329,50 @@
             const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
             localStorage.setItem('theme', nextTheme);
             applyTheme(nextTheme);
+        }
+
+        function setBackupButtonState(isBusy) {
+            if (!backupButton || !backupIcon || !backupLabel) return;
+            backupButton.disabled = isBusy;
+            backupIcon.textContent = isBusy ? '⟳' : '⬇';
+            backupLabel.textContent = isBusy ? 'Preparing Backup' : 'Backup Index';
+        }
+
+        async function backupIndex() {
+            setBackupButtonState(true);
+
+            try {
+                const response = await fetch('/api/backup-index', {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    let errorMessage = 'Backup failed';
+                    try {
+                        const data = await response.json();
+                        errorMessage = data.error || errorMessage;
+                    } catch (error) {}
+                    throw new Error(errorMessage);
+                }
+
+                const blob = await response.blob();
+                const contentDisposition = response.headers.get('content-disposition') || '';
+                const match = contentDisposition.match(/filename=\"?([^"]+)\"?/i);
+                const fileName = match ? match[1] : 'engram-data-backup.zip';
+                const downloadUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+
+                link.href = downloadUrl;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(downloadUrl);
+            } catch (error) {
+                alert(`Backup failed: ${error.message}`);
+            } finally {
+                setBackupButtonState(false);
+            }
         }
 
         const savedFuzzyMode = localStorage.getItem('fuzzyMode');

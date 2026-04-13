@@ -12,17 +12,17 @@ let zipPath;
 if (zipArg) {
     zipPath = path.resolve(zipArg);
 } else {
-    const files = fs.readdirSync(dataDir)
-        .filter(f => f.startsWith('backup-') && f.endsWith('.zip'))
+    const files = fs.readdirSync(projectRoot)
+        .filter(f => f.startsWith('data.backup-') && f.endsWith('.zip'))
         .sort()
         .reverse();
 
     if (files.length === 0) {
-        console.error('❌ No backup files found in ./data');
+        console.error('❌ No backup files found in project root');
         process.exit(1);
     }
 
-    zipPath = path.join(dataDir, files[0]);
+    zipPath = path.join(projectRoot, files[0]);
     console.log(`📦 Auto-selected: ${files[0]}`);
 }
 

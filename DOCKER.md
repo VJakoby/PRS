@@ -86,6 +86,9 @@ npm run docker:index:online
 
 # OPTIONAL: Build offline cache for sources (both online and local)
 npm run docker:cache
+
+# Create a portable zip backup of ./data
+npm run docker:backup
 ---
 ```
 ---
