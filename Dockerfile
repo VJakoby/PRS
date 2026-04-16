@@ -12,6 +12,7 @@ RUN npm ci --omit=dev
 COPY indexer.js .
 COPY server.js .
 COPY synonyms.json .
+COPY scripts ./scripts/
 COPY public ./public/
 
 # Create directories
