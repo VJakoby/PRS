@@ -56,7 +56,7 @@ Service runs on `http://localhost:3002`.
 ---
 
 ## 🐳 Docker (Alternative)
-
+See [DOCKER.md](https://github.com/VJakoby/engram/blob/main/DOCKER.md)
 ```bash
 docker network create pragma-net 2>/dev/null || true
 docker-compose up --build
