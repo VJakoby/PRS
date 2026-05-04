@@ -1,4 +1,4 @@
-# 🔎 ENGRAM — Indexed Search Surface
+# 🔎 ENGRAM — Indexed Search
 
 > A fast local tool for searching indexed documentation — both online sources and local markdown files.
 
