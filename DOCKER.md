@@ -46,7 +46,7 @@ Mounted paths:
 ### 2. Run indexing (Docker CLI)
 
 ```bash
-docker compose run --rm engram npm run index --help
+docker compose run --rm engram npm run index -- --help
 ```
 
 #### Indexing
