@@ -1,9 +1,11 @@
 # 🚀 Docker Usage Workflow
 
 ### 1. Build the image (only when code changes)
+
 ```bash
 docker compose build
 ```
+
 ---
 
 ### Local Note Mounts
@@ -26,83 +28,64 @@ NOTES_PATH_2=
 NOTES_PATH_3=
 ```
 
-On Linux, set `PUID` and `PGID` to your real user:
+On Linux:
 
 ```bash
 echo "PUID=$(id -u)" >> .env
 echo "PGID=$(id -g)" >> .env
 ```
 
-Mounted paths inside the container:
+Mounted paths:
 
-- `NOTES_PATH` -> `/app/notes`
-- `NOTES_PATH_2` -> `/app/notes-2`
-- `NOTES_PATH_3` -> `/app/notes-3`
-
-If all notes live under one parent directory, only `NOTES_PATH` is needed.
-If notes live in multiple unrelated directories, define multiple `offline_sources` entries in `sources.json` that point to `/app/notes`, `/app/notes-2`, and `/app/notes-3`.
-If `NOTES_PATH_2` or `NOTES_PATH_3` are left empty, they fall back to internal empty directories.
-
-Example:
-
-`.env`
-```env
-NOTES_PATH=/home/kali/SYNC/Pentesting-Methodology
-```
-
-`sources.json`
-```json
-{
-  "offline_sources": [
-    {
-      "id": "pentesting-methodology",
-      "name": "Pentesting Methodology",
-      "type": "markdown",
-      "path": "/app/notes",
-      "enabled": true
-    }
-  ]
-}
-```
+- `/app/notes`
+- `/app/notes-2`
+- `/app/notes-3`
 
 ---
 
-### 2. Run indexing after editing `sources.json` 
+### 2. Run indexing (Docker CLI)
+
 ```bash
-# Show usage commands
-npm run docker:index:help
-
-# ALL sources (index all defined sources)
-npm run docker:index
-
-# ALL sources (Force index on all defined sources)
-npm run docker:index:force
-
-# LOCAL sources (Index only local sources)
-npm run docker:index:local
-
-# ONLINE sources (Index only online sources)
-npm run docker:index:online
-
-# OPTIONAL: Build offline cache for sources (both online and local)
-npm run docker:cache
-
-# Create a portable zip backup of ./data
-npm run docker:backup
----
+docker compose run --rm engram npm run index --help
 ```
+
+#### Indexing
+
+```bash
+docker compose run --rm engram npm run index
+docker compose run --rm engram npm run index -- --local
+docker compose run --rm engram npm run index -- --online
+docker compose run --rm engram npm run index -- --force
+```
+
+#### Utilities
+
+```bash
+docker compose run --rm engram npm run info
+docker compose run --rm engram npm run search "query"
+```
+
+#### Cache / backup
+
+```bash
+docker compose run --rm engram npm run cache
+docker compose run --rm engram npm run backup
+docker compose run --rm engram npm run restore
+```
+
 ---
 
-### 3. Start the webserver
+### 3. Start server
+
 ```bash
-npm run docker:up
-# OR
 docker compose up -d
 ```
 
-### Common Failure Modes
+---
 
-If you restored or moved `./data`, Docker may no longer be able to write `/app/data/index.json`. Fix it on the host:
+### Common Issues
+
+Fix permissions:
 
 ```bash
 mkdir -p data
@@ -110,9 +93,9 @@ sudo chown -R $USER:$USER data
 chmod -R u+rwX data
 ```
 
-If that directory is bind-mounted from Linux, also ensure `.env` contains matching `PUID` and `PGID`, then recreate the container:
+Restart:
 
 ```bash
-npm run docker:down
-npm run docker:up
+docker compose down
+docker compose up -d
 ```
