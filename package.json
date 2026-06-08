@@ -9,6 +9,7 @@
   "main": "server.js",
 
   "scripts": {
+    "setup": "node scripts/setup.js",
     "start": "node server.js",
     "index": "node indexer.js build ",
     "cache": "node indexer.js cache",

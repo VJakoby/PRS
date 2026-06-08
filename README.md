@@ -30,12 +30,12 @@ npm install
 
 ### 2. Configure Sources
 ```bash
-# Copy the template
-cp sources.json.template sources.json
-
-# Edit with your sources
-nano sources.json
+npm run setup
 ```
+
+The guided setup creates `sources.json`, asks for an optional local notes
+directory, and preserves an existing configuration unless you confirm
+overwriting it. Review `sources.json` afterward to add or enable online sources.
 
 ### 3. Build Index
 ```bash
@@ -57,12 +57,18 @@ Service runs on `http://localhost:3002`.
 
 ## 🐳 Docker (Alternative)
 
+Run the guided setup in Docker mode:
+
 ```bash
-docker network create pragma-net 2>/dev/null || true
-docker-compose up --build
+npm run setup -- --docker
 ```
 
-ENGRAM will be available at `http://localhost:3002`.
+The command writes the host notes path, host port, and user IDs to `.env`, writes the
+container path `/app/notes` to `sources.json`, and creates the required bind-mount directories. It then prints the build, indexing, and startup commands.
+
+An existing `sources.json` is preserved unless you explicitly confirm overwriting it. The container always listens on port `3002`; `ENGRAM_PORT` controls the host port used by Docker and VS Code.
+
+ENGRAM will be available at `http://localhost:<ENGRAM_PORT>` (port `3002` by default).
 
 When running alongside PRAGMA in Docker, they communicate over a shared internal network (`http://engram:3002`). See PRAGMA's [DOCKER.md](https://github.com/VJakoby/pragma/blob/main/DOCKER.md) for the combined setup.
 
